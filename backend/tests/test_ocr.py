@@ -119,7 +119,7 @@ needs_samples = pytest.mark.skipif(not manifest, reason="run generate_samples.py
 @needs_samples
 @pytest.mark.parametrize(
     "sample",
-    [s for s in manifest if s["expected_status"] != "pass_or_needs_review"],
+    [s for s in manifest if not s["degraded"]],
     ids=lambda s: s["image"],
 )
 def test_ocr_reads_every_printed_field(sample):
@@ -136,8 +136,11 @@ def test_ocr_reads_every_printed_field(sample):
 
 
 @needs_samples
-def test_degraded_label_scores_lower_confidence_than_clean():
+def test_degraded_label_flags_its_garbled_lines_as_low_confidence():
+    """The blurry label is the 'uncertain' fixture: OCR must still read it, and must report low
+    confidence on the lines it garbles, or verification can't tell a bad photo from a bad label."""
     clean = ocr.extract_text((SAMPLES / "vitamin_correct.png").read_bytes())
-    noisy = ocr.extract_text((SAMPLES / "vitamin_low_quality.png").read_bytes())
-    assert noisy.text  # still reads something
+    noisy = ocr.extract_text((SAMPLES / "vitamin_low_quality.jpg").read_bytes())
+    assert "vitacore" in norm(noisy.text)
     assert noisy.mean_confidence < clean.mean_confidence
+    assert min(l.confidence for l in noisy.lines) < 0.9
