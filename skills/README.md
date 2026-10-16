@@ -1,6 +1,6 @@
 # Reusable AI Skills
 
-**Owner:** Vincent
+**Owner:** Vincent (QA) · Tray
 
 Agent skills packaged for the CSE 651 requirement. Each folder holds a `SKILL.md` (name and description in the frontmatter, instructions in the body) plus any helper scripts.
 
