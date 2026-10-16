@@ -10,6 +10,9 @@ Agent skills packaged for the CSE 651 requirement. Each folder holds a `SKILL.md
 
 ## Install
 
+**Muse Code:** nothing to do. The skill is already in `.agents/skills/labelguard-testing/`, which Muse loads once you trust the workspace (see [docs/muse-setup.md](../docs/muse-setup.md)). Edit `skills/labelguard-testing/SKILL.md` and copy it there; CI fails if the two differ.
+
+
 **Claude Code** (this project only, from the repo root):
 ```bash
 mkdir -p .claude/skills && cp -r skills/labelguard-testing .claude/skills/

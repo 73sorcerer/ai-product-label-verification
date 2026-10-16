@@ -32,6 +32,10 @@ jobs:
           cache-dependency-path: backend/requirements.txt
       - run: pip install -r requirements.txt
       - run: pytest -q
+      - name: Agent skill copies match
+        working-directory: .
+        # Muse Code loads skills from .agents/skills/; skills/ is the course deliverable. Keep them identical.
+        run: diff -r skills/labelguard-testing/SKILL.md .agents/skills/labelguard-testing/SKILL.md
 
   e2e-local:
     name: End-to-end (local server)
