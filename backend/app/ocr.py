@@ -111,19 +111,23 @@ def build_result(lines: list[OcrLine], engine: str) -> OcrResult:
 @lru_cache(maxsize=1)
 def _rapidocr_engine():
     # Loading the ONNX models takes about 1 s, so do it once per process.
-    from rapidocr_onnxruntime import RapidOCR
+    # rapidocr 3.x bundles its models in the wheel and uses headless OpenCV (no libGL/libxcb),
+    # which is what lets it run on Vercel. Don't switch back to rapidocr_onnxruntime.
+    from rapidocr import RapidOCR
 
-    return RapidOCR()
+    return RapidOCR(params={"Global.log_level": "warning"})
 
 
 def _run_rapidocr(image: Image.Image) -> list[OcrLine]:
     import numpy as np
 
     try:
-        result, _elapsed = _rapidocr_engine()(np.array(image.convert("RGB")))
+        out = _rapidocr_engine()(np.array(image.convert("RGB")))
     except Exception as e:  # the engine raises assorted types on bad input
         raise OcrError(f"RapidOCR failed: {e}") from e
-    return parse_rapidocr(result or [])
+    if out.boxes is None:  # nothing detected
+        return []
+    return parse_rapidocr(list(zip(out.boxes.tolist(), out.txts, out.scores)))
 
 
 def parse_rapidocr(result: list) -> list[OcrLine]:

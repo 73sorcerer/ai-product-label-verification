@@ -6,6 +6,8 @@
       "product_name": "Golden Harvest Granola",
       "net_contents": "Net Wt 12 oz (340 g)",
       "allergens": "Contains: Oats, Almonds, Milk",
+      "sku": "SKU: SF-GRN-12",
+      "best_by": "Best By: 03/15/2027",
       "manufacturer": "Sunrise Farms Co., Portland, OR"
     }
   },
@@ -16,6 +18,8 @@
       "product_name": "Cold Brew Coffee",
       "net_contents": "16 FL OZ (473 mL)",
       "allergens": "Contains: Milk",
+      "sku": "SKU: PR-CB-16",
+      "best_by": "Best By: 01/10/2027",
       "manufacturer": "Peak Roasters LLC, Denver, CO"
     }
   },
@@ -26,6 +30,8 @@
       "product_name": "Daily Multivitamin",
       "net_contents": "60 Tablets",
       "allergens": "Contains: Soy",
+      "sku": "SKU: VC-MV-060",
+      "best_by": "Best By: 08/31/2028",
       "manufacturer": "VitaCore Health, Austin, TX"
     }
   }

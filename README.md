@@ -2,6 +2,8 @@
 
 CSE 651 (Software Development with Agentic AI) · Demo: **Oct 20, 2026**
 
+**Live:** https://ai-product-label-verification.vercel.app · [API docs](https://ai-product-label-verification.vercel.app/api/docs)
+
 Save an approved product label spec, upload a photo of the printed label, and get **Pass** or **Needs Review**, with the reason for each field (missing, incorrect, or uncertain).
 
 ## Team
@@ -10,7 +12,7 @@ Save an approved product label spec, upload a photo of the printed label, and ge
 | Tray | Tech lead / OCR | `backend/app/ocr.py`, `data/sample_labels/`, `docs/` |
 | Wenyi | Frontend | `frontend/` |
 | Amzad | Backend | `backend/app/{main,models,database,verification}.py` |
-| Vincent | DevOps | `.github/workflows/`, deployment, `skills/` |
+| Vincent | DevOps | `.github/workflows/`, `vercel.json`, `tests/e2e/`, `skills/` |
 
 Start here: [docs/api-contract.md](docs/api-contract.md) → [docs/architecture.md](docs/architecture.md)
 
@@ -23,6 +25,8 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload   # http://localhost:8000/docs
 pytest -q
 ```
+
+End-to-end (with the API running): `cd tests/e2e && pytest -q -rx`. Deployment: [docs/deployment.md](docs/deployment.md).
 
 Try OCR now:
 ```bash

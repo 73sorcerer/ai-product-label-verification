@@ -7,8 +7,11 @@
       "product_name": "Golden Harvest Granola",
       "net_contents": "Net Wt 12 oz (340 g)",
       "allergens": "Contains: Oats, Almonds, Milk",
+      "sku": "SKU: SF-GRN-12",
+      "best_by": "Best By: 03/15/2027",
       "manufacturer": "Sunrise Farms Co., Portland, OR"
     },
+    "degraded": false,
     "expected_status": "pass",
     "expected_flags": {}
   },
@@ -20,8 +23,11 @@
       "product_name": "Golden Harvest Granola",
       "net_contents": "Net Wt 10 oz (283 g)",
       "allergens": "Contains: Oats, Almonds, Milk",
+      "sku": "SKU: SF-GRN-12",
+      "best_by": "Best By: 03/15/2027",
       "manufacturer": "Sunrise Farms Co., Portland, OR"
     },
+    "degraded": false,
     "expected_status": "needs_review",
     "expected_flags": {
       "net_contents": "incorrect"
@@ -34,8 +40,11 @@
       "brand": "Sunrise Farms",
       "product_name": "Golden Harvest Granola",
       "net_contents": "Net Wt 12 oz (340 g)",
+      "sku": "SKU: SF-GRN-12",
+      "best_by": "Best By: 03/15/2027",
       "manufacturer": "Sunrise Farms Co., Portland, OR"
     },
+    "degraded": false,
     "expected_status": "needs_review",
     "expected_flags": {
       "allergens": "missing"
@@ -49,8 +58,11 @@
       "product_name": "Cold Brew Coffee",
       "net_contents": "16 FL OZ (473 mL)",
       "allergens": "Contains: Milk",
+      "sku": "SKU: PR-CB-16",
+      "best_by": "Best By: 01/10/2027",
       "manufacturer": "Peak Roasters LLC, Denver, CO"
     },
+    "degraded": false,
     "expected_status": "pass",
     "expected_flags": {}
   },
@@ -62,11 +74,32 @@
       "product_name": "Cold Brew Coffee",
       "net_contents": "16 FL OZ (473 mL)",
       "allergens": "Contains: Milk",
+      "sku": "SKU: PR-CB-16",
+      "best_by": "Best By: 01/10/2027",
       "manufacturer": "Peak Roasters LLC, Denver, CO"
     },
+    "degraded": false,
     "expected_status": "needs_review",
     "expected_flags": {
       "brand": "incorrect"
+    }
+  },
+  {
+    "image": "coffee_wrong_best_by.png",
+    "spec_id": "coffee",
+    "printed_fields": {
+      "brand": "Peak Roasters",
+      "product_name": "Cold Brew Coffee",
+      "net_contents": "16 FL OZ (473 mL)",
+      "allergens": "Contains: Milk",
+      "sku": "SKU: PR-CB-16",
+      "best_by": "Best By: 01/10/2026",
+      "manufacturer": "Peak Roasters LLC, Denver, CO"
+    },
+    "degraded": false,
+    "expected_status": "needs_review",
+    "expected_flags": {
+      "best_by": "incorrect"
     }
   },
   {
@@ -77,24 +110,50 @@
       "product_name": "Daily Multivitamin",
       "net_contents": "60 Tablets",
       "allergens": "Contains: Soy",
+      "sku": "SKU: VC-MV-060",
+      "best_by": "Best By: 08/31/2028",
       "manufacturer": "VitaCore Health, Austin, TX"
     },
+    "degraded": false,
     "expected_status": "pass",
     "expected_flags": {}
   },
   {
-    "image": "vitamin_low_quality.png",
+    "image": "vitamin_wrong_sku.png",
     "spec_id": "vitamin",
     "printed_fields": {
       "brand": "VitaCore",
       "product_name": "Daily Multivitamin",
       "net_contents": "60 Tablets",
       "allergens": "Contains: Soy",
+      "sku": "SKU: VC-MV-090",
+      "best_by": "Best By: 08/31/2028",
       "manufacturer": "VitaCore Health, Austin, TX"
     },
-    "expected_status": "pass_or_needs_review",
+    "degraded": false,
+    "expected_status": "needs_review",
     "expected_flags": {
-      "*": "uncertain_or_match"
+      "sku": "incorrect"
     }
+  },
+  {
+    "image": "vitamin_low_quality.jpg",
+    "spec_id": "vitamin",
+    "printed_fields": {
+      "brand": "VitaCore",
+      "product_name": "Daily Multivitamin",
+      "net_contents": "60 Tablets",
+      "allergens": "Contains: Soy",
+      "sku": "SKU: VC-MV-060",
+      "best_by": "Best By: 08/31/2028",
+      "manufacturer": "VitaCore Health, Austin, TX"
+    },
+    "degraded": true,
+    "expected_status": "needs_review",
+    "expected_flags": {
+      "allergens": "uncertain",
+      "best_by": "uncertain"
+    },
+    "notes": "manufacturer reads 'VitaCore Heath' at 0.95 confidence; flagging it incorrect is an acceptable false alarm (status is needs_review either way)."
   }
 ]

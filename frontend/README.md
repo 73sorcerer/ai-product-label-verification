@@ -13,4 +13,10 @@ Build against [docs/api-contract.md](../docs/api-contract.md). The TypeScript ty
 
 `POST /ocr` already works. Use it to build the upload and extracted-text UI before Amzad's routes are ready.
 
-API base URL: `process.env.NEXT_PUBLIC_API_URL` (default `http://localhost:8000`). The backend allows CORS from `http://localhost:3000`.
+API base URL: `process.env.NEXT_PUBLIC_API_URL`. Use `http://localhost:8000` locally; on Vercel it's `/api` (same origin). The local backend allows CORS from `http://localhost:3000`.
+
+**Deployed API (works now):** https://ai-product-label-verification.vercel.app/api. Try `/api/ocr` from your UI.
+
+**Must-do: compress images before upload.** Vercel rejects request bodies over 4.5 MB, and phone photos are often bigger. Resize to ≤ 1600 px on the long side (e.g. canvas → `toBlob('image/jpeg', 0.85)`).
+
+**Deploying:** the frontend ships as a Vercel service in the same project; see [docs/deployment.md](../docs/deployment.md#adding-the-frontend-when-wenyi-pushes-frontend). Run `npx create-next-app@latest frontend --ts --app --eslint` from the repo root; `vercel.json` handles the rest.

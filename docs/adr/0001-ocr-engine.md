@@ -20,4 +20,5 @@ Use **RapidOCR** by default, behind `app/ocr.py`. Keep a **Tesseract** adapter s
 ## Consequences
 - **Easier:** `pip install -r requirements.txt` is the whole setup, on any OS and any Python host. Works offline during the demo.
 - **Harder:** The deploy image is larger (onnxruntime). The first request after a cold start is slower.
+- **Amended 2026-10-16 by [0002](0002-hosting-vercel-neon.md):** the package is now `rapidocr` 3.x instead of `rapidocr_onnxruntime`. The old package needs desktop OpenCV, which fails on Vercel (`libxcb.so.1` missing). 3.x also ships newer models. Clean labels now score ≈ 0.99–1.00, so the "low quality" sample had to be made rougher to stay a useful test.
 - **Revisit when:** real-world photos (curved bottles, glare) show poor accuracy. Then evaluate a cloud OCR behind the same interface.

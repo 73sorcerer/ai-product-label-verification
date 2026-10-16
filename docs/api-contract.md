@@ -4,8 +4,9 @@
 
 The frontend and backend build against this file. If you need to change it, open a PR that edits this file first and tag the other side.
 
-Base URL: local `http://localhost:8000`; deployed, set by Vincent through `NEXT_PUBLIC_API_URL`.
-Interactive docs: `GET /docs` (FastAPI Swagger).
+Base URL: local `http://localhost:8000` · deployed **`https://ai-product-label-verification.vercel.app/api`** (frontend uses `NEXT_PUBLIC_API_URL=/api`, same origin).
+Interactive docs: `/docs` locally · [/api/docs](https://ai-product-label-verification.vercel.app/api/docs) deployed.
+**Uploads must be under 4.5 MB on Vercel.** The frontend should resize photos (≤ 1600 px long side) before sending.
 
 ## Status values
 
@@ -21,7 +22,7 @@ Interactive docs: `GET /docs` (FastAPI Swagger).
 ## Endpoints
 
 ### `GET /health`
-`200 {"status": "ok"}`
+`200 {"status": "ok", "database": "sqlite" | "postgresql"}` · `503` if the database is unreachable
 
 ### `POST /ocr` (works now)
 OCR only, no comparison. Wenyi can build the upload screen against it before verification is done.
@@ -86,8 +87,17 @@ extract_text(image_bytes: bytes) -> OcrResult      # raises OcrError
 verify_label(ocr: OcrResult, expected: dict[str, str]) -> VerificationResult
 ```
 
-### Notes for verification (measured on `data/sample_labels/`)
-- Clean labels read every field exactly, with mean confidence **≈ 0.99**.
-- The blurry, rotated label still reads every field, but OCR drops spaces and swaps punctuation: `60Tablets`, `Contains:Soy`, `VitaCore Health,Austin.TX`. Mean confidence falls to **≈ 0.93**. **Normalize before comparing**: lowercase, then strip whitespace and punctuation.
-- A reasonable starting threshold for `uncertain` is a line confidence below **0.90**. Tune it against the samples.
-- `data/sample_labels/manifest.json` lists the expected flags for each sample. Use it as test fixtures.
+### Notes for verification (measured Oct 16 on `data/sample_labels/`, rapidocr 3.x)
+- Every label has 7 fields: `brand`, `product_name`, `net_contents`, `allergens`, `sku`, `best_by`, `manufacturer`. Spec values include their printed prefix (`"SKU: SF-GRN-12"`, `"Best By: 03/15/2027"`).
+- Clean labels: every field read exactly, line confidence **0.97–1.00**.
+- `vitamin_low_quality.jpg` is a **correct** label in a bad photo. OCR returns:
+
+  | Line | Read as | Confidence | Must be |
+  |---|---|---|---|
+  | `Contains: Soy` | `Cons usoy` | 0.64 | `uncertain` |
+  | `Best By: 08/31/2028` | `Dest By: 06/312028` | 0.87 | `uncertain`, **not** `incorrect` |
+  | `VitaCore Health, Austin, TX` | `VitaCore Heath, Austin, TX` | 0.95 | `incorrect` is an acceptable false alarm |
+
+  So: **check confidence before calling a mismatch `incorrect`**. Below **0.90** → `uncertain`. Otherwise a blurry photo of a good label reports a wrong expiry date.
+- **Normalize before comparing**: lowercase, strip whitespace and punctuation (OCR drops spaces such as `Contains:Soy`).
+- `data/sample_labels/manifest.json` is the answer key, and `tests/e2e/` checks every sample against it.

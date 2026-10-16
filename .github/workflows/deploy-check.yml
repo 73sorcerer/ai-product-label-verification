@@ -1,0 +1,34 @@
+# OWNER: Vincent
+# After Vercel finishes a production deployment, run the E2E suite against the live URL.
+# Also runnable by hand: Actions -> "Deployment check" -> Run workflow (optionally with a URL).
+name: Deployment check
+
+on:
+  deployment_status:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "API base URL"
+        default: "https://ai-product-label-verification.vercel.app/api"
+
+jobs:
+  e2e-deployed:
+    name: End-to-end (deployed)
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.deployment_status.state == 'success' &&
+       github.event.deployment_status.environment == 'Production')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r tests/requirements.txt
+      - name: Run E2E against deployment
+        working-directory: tests/e2e
+        env:
+          E2E_BASE_URL: ${{ inputs.base_url || format('{0}/api', github.event.deployment_status.environment_url) }}
+        run: |
+          echo "Testing $E2E_BASE_URL"
+          pytest -q -rx
