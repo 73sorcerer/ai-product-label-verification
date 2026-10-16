@@ -16,6 +16,8 @@ Save an approved product label spec, upload a photo of the printed label, and ge
 
 Start here: [docs/api-contract.md](docs/api-contract.md) → [docs/architecture.md](docs/architecture.md)
 
+Using an AI agent? It reads [AGENTS.md](AGENTS.md). **Muse Code users:** do the one-time setup in [docs/muse-setup.md](docs/muse-setup.md) first.
+
 ## Run the backend
 ```bash
 cd backend
