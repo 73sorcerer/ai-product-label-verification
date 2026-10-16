@@ -1,4 +1,4 @@
-# OWNER: Vincent
+# OWNER: Tray (deployment) · results reviewed by Vincent (QA)
 # After Vercel finishes a production deployment, run the E2E suite against the live URL.
 # Also runnable by hand: Actions -> "Deployment check" -> Run workflow (optionally with a URL).
 name: Deployment check

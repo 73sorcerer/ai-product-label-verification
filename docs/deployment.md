@@ -1,6 +1,6 @@
 # Deployment
 
-**Owner:** Vincent · Live: **https://ai-product-label-verification.vercel.app** · API docs: [/api/docs](https://ai-product-label-verification.vercel.app/api/docs)
+**Owner:** Tray (deployment + integration) · Live: **https://ai-product-label-verification.vercel.app** · API docs: [/api/docs](https://ai-product-label-verification.vercel.app/api/docs)
 
 ## Topology
 
@@ -33,10 +33,9 @@ Never commit secrets. `vercel env pull` writes `.env.local`, which is git-ignore
 - **Manual:** `vercel deploy` (preview) or `vercel deploy --prod` from the repo root.
 - **Check it:** Actions → *Deployment check* runs the E2E suite against production after each production deploy. You can also run it by hand.
 
-## One-time setup (Tray)
+## One-time setup
 
-1. Connect GitHub to Vercel: [vercel.com/account/login-connections](https://vercel.com/account/login-connections) → GitHub, then Project → Settings → Git → connect `Auth3nticAI/ai-product-label-verification`.
-2. Done already: project linked, Neon provisioned, first production deploy.
+Done: Vercel project linked to GitHub, Neon provisioned, `main` protected (PR + green CI required to merge).
 
 ## Adding the frontend (when Wenyi pushes `frontend/`)
 

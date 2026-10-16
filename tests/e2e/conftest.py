@@ -27,9 +27,16 @@ def api():
 
 
 def require_implemented(response: httpx.Response) -> httpx.Response:
-    """Routes that are still stubs return 501. Mark the test xfail so CI stays green until they land."""
+    """Routes that are still stubs return 501.
+
+    Default: xfail, so required CI stays green while features are in progress.
+    E2E_STRICT=1: fail instead, so "MVP completeness" honestly shows what's still missing.
+    """
     if response.status_code == 501:
-        pytest.xfail(f"{response.request.method} {response.request.url.path} not implemented yet")
+        msg = f"{response.request.method} {response.request.url.path} not implemented yet"
+        if os.getenv("E2E_STRICT") == "1":
+            pytest.fail(msg, pytrace=False)
+        pytest.xfail(msg)
     return response
 
 
