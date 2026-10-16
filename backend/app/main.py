@@ -8,9 +8,10 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 
 from app import ocr
-from app.database import init_db
+from app.database import engine, init_db
 from app.models import InspectionOut, OcrOut, ProductSpecIn, ProductSpecOut
 
 
@@ -20,7 +21,13 @@ async def lifespan(_: FastAPI):
     yield
 
 
-app = FastAPI(title="Product Label Verification API", version="0.1.0", lifespan=lifespan)
+# On Vercel the API is served under /api (see vercel.json). root_path makes /api/docs load the right schema URL.
+app = FastAPI(
+    title="Product Label Verification API",
+    version="0.1.0",
+    lifespan=lifespan,
+    root_path="/api" if os.getenv("VERCEL") else "",
+)
 
 # TODO(Vincent): set CORS_ORIGINS to the deployed frontend URL.
 app.add_middleware(
@@ -33,7 +40,14 @@ app.add_middleware(
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    """Liveness + database check. Used by CI smoke tests and the demo warm-up (docs/deployment.md)."""
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        db = engine.dialect.name  # "sqlite" locally, "postgresql" when deployed
+    except Exception:
+        raise HTTPException(503, "database unreachable")
+    return {"status": "ok", "database": db}
 
 
 @app.post("/ocr", response_model=OcrOut)
