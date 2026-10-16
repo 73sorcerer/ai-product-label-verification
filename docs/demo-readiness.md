@@ -10,7 +10,7 @@ One-line reason: ___
 ## Pre-demo checklist (Tue Oct 20, 30 min before)
 
 - [ ] https://ai-product-label-verification.vercel.app loads on the presenting laptop and on a phone
-- [ ] `/api/health` returns `"database": "postgresql"`
+- [ ] `/api/health` returns `"database": "postgresql"` and the latest `main` commit
 - [ ] Warm-up: upload one label ~2 minutes before (the first OCR call after idle takes ~12 s)
 - [ ] Demo specs already created (Golden Harvest Granola, VitaCore)
 - [ ] Demo images downloaded locally: `granola_correct.png`, `granola_wrong_net_weight.png`, `vitamin_wrong_sku.png`, `vitamin_low_quality.jpg`

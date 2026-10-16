@@ -5,7 +5,7 @@ SAMPLE = Path(__file__).resolve().parents[2] / "data" / "sample_labels" / "grano
 
 
 def test_health(client):
-    assert client.get("/health").json() == {"status": "ok", "database": "sqlite"}
+    assert client.get("/health").json() == {"status": "ok", "database": "sqlite", "commit": "local"}
 
 
 def test_ocr_endpoint_returns_text(client):

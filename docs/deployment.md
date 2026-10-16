@@ -31,7 +31,7 @@ Never commit secrets. `vercel env pull` writes `.env.local`, which is git-ignore
 
 - **Automatic:** once GitHub is connected (see "One-time setup"), every PR gets a preview URL and every merge to `main` deploys to production.
 - **Manual:** `vercel deploy` (preview) or `vercel deploy --prod` from the repo root.
-- **Check it:** Actions → *Deployment check* runs the E2E suite against production after each production deploy. You can also run it by hand.
+- **Check it:** after each merge to `main`, Actions → *Deployment check* waits until `/api/health` reports the new commit, then runs the E2E suite against production. You can also run it by hand.
 
 ## One-time setup
 
