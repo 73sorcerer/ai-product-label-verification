@@ -48,4 +48,7 @@ sequenceDiagram
 
 ## Decisions
 - [0001: OCR engine](adr/0001-ocr-engine.md)
-- SQLite over Postgres: zero setup, one file, enough for a demo. *TODO(Amzad/Vincent): confirm the host keeps a persistent disk, or history is lost on redeploy.*
+- [0002: Hosting on Vercel + Neon Postgres](adr/0002-hosting-vercel-neon.md): SQLite locally, Neon Postgres in production, picked by `DATABASE_URL`.
+
+## Deployment
+One Vercel project: `/api/*` → FastAPI service, `/*` → Next.js service, same origin. Details: [deployment.md](deployment.md).
