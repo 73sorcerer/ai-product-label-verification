@@ -16,6 +16,7 @@ One-line reason: ___
 - [ ] Demo images downloaded locally: `granola_correct.png`, `granola_wrong_net_weight.png`, `vitamin_wrong_sku.png`, `vitamin_low_quality.jpg`
 - [ ] Latest `main` CI run green, including *MVP completeness*
 - [ ] Backup video and screenshots on the laptop (in case of network failure)
+- [ ] Pricing demo uses a **fresh browser profile/incognito** (a workspace that already subscribed gets "Use Manage billing" instead of a new checkout)
 - [ ] GitHub tabs open: a merged PR, the Actions page, `skills/labelguard-testing`
 
 ## Demo run-through (matches the tracker's demo script)
@@ -28,6 +29,7 @@ One-line reason: ___
 | 4 | Upload `vitamin_wrong_sku.png` | **Needs Review**: sku incorrect | |
 | 5 | Upload `vitamin_low_quality.jpg` | **Needs Review**: best_by **uncertain**, not incorrect | |
 | 6 | Open history | All of the above, with timestamps | |
+| 6b | Pricing → Professional → Start trial → 4242 card | Success page confirms; sidebar shows "Professional · Trial"; Manage billing opens the portal | |
 | 7 | GitHub: PRs, CI, Skill, AI-usage log | Green checks, merged PRs from every member | |
 
 ## Test evidence
