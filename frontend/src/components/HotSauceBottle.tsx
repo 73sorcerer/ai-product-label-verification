@@ -18,7 +18,8 @@ export default function HotSauceBottle({ expanded, onActivate }: Props) {
   useEffect(() => {
     let cancelled = false;
     const element = host.current!;
-    import("./hot-sauce-scene").then(({ createBottleScene }) => {
+    import("./hot-sauce-scene").then(async ({ createBottleScene, loadBottleLabelFont }) => {
+      await loadBottleLabelFont();
       if (cancelled) return;
       try {
         scene.current = createBottleScene(element, () => { scene.current?.dispose(); scene.current = null; setReady(false); });

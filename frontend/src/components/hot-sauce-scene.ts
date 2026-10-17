@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { createHotSauceModel } from "./hot-sauce-model";
+export { loadBottleLabelFont } from "./hot-sauce-model";
 
 export function createBottleScene(host: HTMLElement, onFailure: () => void) {
   const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "low-power" });
@@ -50,7 +51,9 @@ export function createBottleScene(host: HTMLElement, onFailure: () => void) {
         if (object instanceof THREE.Mesh) {
           geometries.add(object.geometry);
           for (const material of Array.isArray(object.material) ? object.material : [object.material]) {
-            materials.add(material); if (material.map) textures.add(material.map);
+            materials.add(material);
+            if (material.map) textures.add(material.map);
+            if (material.bumpMap) textures.add(material.bumpMap);
           }
           if (object instanceof THREE.InstancedMesh) object.dispose();
         }

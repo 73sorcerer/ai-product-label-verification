@@ -10,7 +10,11 @@ third-party product branding, or purchased textures are included.
 - Coordinates: Y up, label toward +Z, height 3.39 scene units. Dimensions are
   artistic proportions, not manufacturing measurements.
 - Rotation is limited by `hot-sauce-scene.ts` to -90 through +90 degrees.
+- Label lettering uses the locally bundled Bebas Neue Regular typeface from
+  Google Fonts, under the SIL Open Font License; see `../fonts/bebas-neue/OFL.txt`.
+  Load `loadBottleLabelFont()` before creating or exporting the model.
 
 The model recreates the existing product's appearance; it is not a scan of the
 photograph. The unchanged original photograph remains the loading/no-WebGL
-fallback. Rendering and the GLB use the project's existing license.
+fallback. Original geometry uses the project's existing license; bundled font
+licensing remains as noted above.
