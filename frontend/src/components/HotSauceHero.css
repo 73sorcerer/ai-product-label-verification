@@ -1,0 +1,36 @@
+.hot-sauce-bottle {
+  position: relative;
+  display: block;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
+}
+.hot-sauce-art { position: absolute; inset: 0; display: block; transform: perspective(900px) rotateX(var(--bottle-rotate-x, 0deg)) rotateY(var(--bottle-rotate-y, 0deg)); transform-origin: 50% 54%; transition: transform 400ms cubic-bezier(.2,.8,.2,1); }
+.hot-sauce-poster { display: block; width: 100%; height: 100%; object-fit: contain; user-select: none; }
+.hot-sauce-hint { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; padding: 7px 12px; border: 1px solid #cde8ee; border-radius: 999px; background: #f5fcffed; color: #18637b; font-size: 11px; box-shadow: 0 3px 12px #244c6510; }
+.hot-sauce-popup { position: absolute; z-index: 5; left: 66%; top: 58px; width: 270px; animation: hot-sauce-appear 220ms cubic-bezier(.2,.8,.2,1) both; transform-origin: 0 50%; }
+.hot-sauce-caption { margin-bottom: 8px; padding: 5px 7px; border-radius: 5px; color: #426180; background: #f8fcfff5; font-size: 9px; line-height: 1.35; text-align: center; }
+.hot-sauce-card { overflow: hidden; position: relative; background: #fffffffa; border: 1px solid #d4eee5; border-radius: 16px; box-shadow: 0 20px 48px -16px #123c5552, 0 3px 10px #123c5510; text-align: left; }
+.hot-sauce-close { position: absolute; z-index: 1; right: 8px; top: 8px; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; color: #4d7c72; background: #ffffffb8; cursor: pointer; }
+.hot-sauce-close:hover { background: #e2f8ef; }
+.hot-sauce-header { display: flex; align-items: center; gap: 12px; padding: 22px 18px 18px; background: linear-gradient(130deg, #e5fbf1, #f7fdfb); border-bottom: 1px solid #e1f1e9; }
+.hot-sauce-seal { display: grid; place-items: center; flex-shrink: 0; width: 48px; height: 48px; border-radius: 50%; color: #fff; background: linear-gradient(135deg, #0aca8b, #008f68); box-shadow: 0 0 0 5px #d6f7e9, inset 0 1px 0 #ffffff66; }
+.hot-sauce-eyebrow { font-size: 10px; line-height: 1.3; color: #4c7c6d; }
+.hot-sauce-header h2 { margin: 2px 0; font-size: 26px; font-weight: 750; line-height: 1.1; letter-spacing: -.6px; color: #006e4c; }
+.hot-sauce-summary { color: #14805d; font-size: 11px; }
+.hot-sauce-fields { padding: 3px 16px; }
+.hot-sauce-fields li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid #edf3f6; }
+.hot-sauce-fields li:last-child { border-bottom: 0; }
+.hot-sauce-fields strong { display: block; color: #1d3954; font-size: 11px; line-height: 1.25; font-weight: 550; }
+.hot-sauce-fields small { display: block; margin-top: 2px; color: #637e94; font-size: 10px; line-height: 1.3; }
+.hot-sauce-match { display: grid; place-items: center; flex-shrink: 0; width: 22px; height: 22px; background: #e5f9f0; color: #009563; border-radius: 50%; }
+.hot-sauce-action { display: flex; justify-content: space-between; align-items: center; padding: 13px 16px; border-top: 1px solid #e7f0f3; color: #007b88; background: #f7fbfd; font-size: 11px; font-weight: 600; }
+.hot-sauce-action:hover { background: #eaf6fa; }
+@keyframes hot-sauce-appear { from { opacity: 0; transform: translateY(8px) scale(.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@media (max-width:1190px) { .hot-sauce-popup { width: 245px; top: 45px; } }
+@media (max-width:800px) { .hot-sauce-popup { left: 55%; top: 25px; } }
+@media (max-width:420px) { .hot-sauce-popup { left: 40%; top: 8px; width: 238px; }.hot-sauce-header { padding: 16px 14px 14px; }.hot-sauce-seal { width: 40px; height: 40px; }.hot-sauce-header h2 { font-size: 23px; }.hot-sauce-fields { padding: 3px 14px; }.hot-sauce-fields li { padding: 5px 0; }.hot-sauce-hint { font-size: 10px; bottom: -3px; } }
+@media (prefers-reduced-motion:reduce) { .hot-sauce-popup { animation: none; }.hot-sauce-art { transform: none; transition: none; } }
