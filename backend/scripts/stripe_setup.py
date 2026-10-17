@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -98,7 +99,8 @@ def ensure_webhook(client, write_secret, log=print) -> None:
 
 
 def _vercel_env_add(secret: str) -> None:
-    subprocess.run(["vercel", "env", "add", "STRIPE_WEBHOOK_SECRET", "production"], input=secret, text=True, check=True,
+    vercel = shutil.which("vercel") or "vercel"  # on Windows the CLI is vercel.cmd, which subprocess won't find by name
+    subprocess.run([vercel, "env", "add", "STRIPE_WEBHOOK_SECRET", "production"], input=secret, text=True, check=True,
                    stdout=subprocess.DEVNULL)
 
 

@@ -100,3 +100,12 @@ def test_checkout_blocked_when_already_subscribed(client, fake_stripe):
     assert r.status_code == 409
     assert "Manage billing" in r.json()["detail"]
     assert stripe.v1.checkout.sessions.create.calls == []
+
+
+def test_vercel_production_domain_is_trusted_without_public_url(client, fake_stripe, monkeypatch):
+    """Review: a forgotten PUBLIC_URL must not send payers to localhost. Vercel provides the domain."""
+    monkeypatch.delenv("PUBLIC_URL", raising=False)
+    monkeypatch.setenv("VERCEL_PROJECT_PRODUCTION_URL", "ai-product-label-verification.vercel.app")
+    stripe = fake_stripe()
+    client.post("/billing/checkout", json=BODY, headers={"Origin": "https://ai-product-label-verification.vercel.app"})
+    assert stripe.v1.checkout.sessions.create.calls[0]["cancel_url"] == "https://ai-product-label-verification.vercel.app/pricing"

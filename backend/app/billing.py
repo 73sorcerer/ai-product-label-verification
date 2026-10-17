@@ -43,7 +43,8 @@ def get_stripe() -> StripeClient:
 def _origin(request: Request) -> str:
     """Where Stripe sends the payer back. Origin is caller-controlled, so it's only used when it's
     on the allowlist (PUBLIC_URL + CORS_ORIGINS); otherwise PUBLIC_URL. Prevents an open redirect."""
-    public = (os.getenv("PUBLIC_URL") or "http://localhost:3000").rstrip("/")
+    vercel_domain = os.getenv("VERCEL_PROJECT_PRODUCTION_URL")  # set by Vercel, e.g. "my-app.vercel.app"
+    public = (os.getenv("PUBLIC_URL") or (f"https://{vercel_domain}" if vercel_domain else "http://localhost:3000")).rstrip("/")
     allowed = {public, *(o.strip().rstrip("/") for o in os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",") if o.strip())}
     origin = (request.headers.get("origin") or "").rstrip("/")
     return origin if origin in allowed else public
