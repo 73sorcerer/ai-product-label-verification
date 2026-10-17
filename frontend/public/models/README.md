@@ -1,20 +1,19 @@
-# Original Hot Sauce
+# Original photographic hot-sauce bottle
 
-Original VeriLabel model, authored for this project. No downloaded geometry,
-third-party product branding, or purchased textures are included.
+This image-based relief model uses the unchanged `products/hero-hot-sauce.png`
+photograph as its front texture. Its label, sauce, cap, and glass details are
+photographic, rather than repainted materials or substitute typography.
 
-- `original-hot-sauce.glb`: editable export with embedded label and sauce textures.
-- Authoritative source: `src/components/hot-sauce-model.ts`.
-- The website generates the same model locally, so it does not download the GLB.
-- Separate parts: glass shell, sauce, paper label, cap, cap ribs, and glass rings.
-- Coordinates: Y up, label toward +Z, height 3.39 scene units. Dimensions are
-  artistic proportions, not manufacturing measurements.
-- Rotation is limited by `hot-sauce-scene.ts` to -90 through +90 degrees.
-- Label lettering uses the locally bundled Bebas Neue Regular typeface from
-  Google Fonts, under the SIL Open Font License; see `../fonts/bebas-neue/OFL.txt`.
-  Load `loadBottleLabelFont()` before creating or exporting the model.
+- Source: `src/components/hot-sauce-model.ts`; call `loadBottlePhoto()` before
+  creating or exporting the model.
+- `original-hot-sauce.glb`: editable model with embedded photographic textures.
+- The front surface follows the photograph's opaque silhouette and a rounded
+  depth profile. The unseen rear continues unprinted edge patches from the photo.
+- Side depth and unseen surfaces are inferred from one image, not measured scans.
+  The model does not establish the real product's shape or manufacturing dimensions.
+- Front projection uses an orthographic camera to preserve the supplied artwork.
+- Drag, buttons, and keyboard rotation remain limited to -90 through +90 degrees.
+- The same unchanged photo remains visible during loading or without WebGL.
 
-The model recreates the existing product's appearance; it is not a scan of the
-photograph. The unchanged original photograph remains the loading/no-WebGL
-fallback. Original geometry uses the project's existing license; bundled font
-licensing remains as noted above.
+No replacement label font or externally sourced geometry is used. The GLB is
+provided as an export; the website builds the model from the original image.
