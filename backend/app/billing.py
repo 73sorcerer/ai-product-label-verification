@@ -13,7 +13,8 @@ from datetime import datetime, timezone
 from typing import Literal
 
 import stripe as stripe_sdk
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -74,6 +75,58 @@ def create_checkout(
             "cancel_url": f"{origin}/pricing",
             "integration_identifier": "labelguard-pricing-" + "".join(random.choices(string.ascii_lowercase, k=8)),
         }
+    )
+    return {"url": session.url}
+
+
+# --- status + portal -------------------------------------------------------------
+
+
+def _iso(value: datetime | None) -> str | None:
+    if value is None:
+        return None
+    if value.tzinfo is None:  # SQLite drops the timezone; every stored time is UTC
+        value = value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc).isoformat()
+
+
+def _subscription_for(db: Session, workspace_id: str) -> Subscription | None:
+    return db.scalar(select(Subscription).where(Subscription.workspace_id == workspace_id))
+
+
+@router.get("/status")
+def billing_status(workspace_id: str = Depends(get_workspace_id), db: Session = Depends(get_db)):
+    """This workspace's plan. All null before the webhook has recorded anything (never 404)."""
+    row = _subscription_for(db, workspace_id)
+    if row is None:
+        return {"plan": None, "interval": None, "status": None, "trial_end": None, "current_period_end": None, "payment_failed": False}
+    return {
+        "plan": row.plan,
+        "interval": row.billing_interval,
+        "status": row.status,
+        "trial_end": _iso(row.trial_end),
+        "current_period_end": _iso(row.current_period_end),
+        "payment_failed": bool(row.payment_failed),
+    }
+
+
+@router.post("/portal")
+def billing_portal(
+    request: Request,
+    response: Response,
+    workspace_id: str = Depends(get_workspace_id),
+    stripe: StripeClient = Depends(get_stripe),
+    db: Session = Depends(get_db),
+):
+    row = _subscription_for(db, workspace_id)
+    if row is None or not row.stripe_customer_id:
+        # Returned (not raised) so a freshly issued workspace cookie isn't dropped.
+        error = JSONResponse({"detail": "No subscription for this workspace"}, status_code=404)
+        for cookie in response.headers.getlist("set-cookie"):
+            error.headers.append("set-cookie", cookie)
+        return error
+    session = stripe.v1.billing_portal.sessions.create(
+        params={"customer": row.stripe_customer_id, "return_url": f"{_origin(request)}/pricing"}
     )
     return {"url": session.url}
 
