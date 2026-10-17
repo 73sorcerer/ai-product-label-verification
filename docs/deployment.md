@@ -9,7 +9,7 @@ One Vercel project (`tray-branch-s-projects/ai-product-label-verification`) usin
 | Path | Service | Source |
 |---|---|---|
 | `/api/*` | FastAPI backend (Python, Fluid Compute) | `backend/` |
-| `/*` | Next.js frontend (add when `frontend/` lands; see below) | `frontend/` |
+| `/*` | Next.js frontend | `frontend/` |
 | database | Neon Postgres `labelguard-db` (Vercel Marketplace) | env `DATABASE_URL` |
 
 The frontend and API share one origin, so the browser makes no cross-origin calls and production needs **no CORS config**. `CORS_ORIGINS` only matters for local dev (frontend on :3000, API on :8000).
@@ -21,7 +21,7 @@ The backend gets requests at `/api/...`. A service-level rewrite in `vercel.json
 | Var | Where | Value | Set by |
 |---|---|---|---|
 | `DATABASE_URL` | backend | Neon Postgres URL | Neon integration (automatic, all environments) |
-| `NEXT_PUBLIC_API_URL` | frontend | `/api` on Vercel; `http://localhost:8000` locally | add in Vercel when the frontend lands |
+| `NEXT_PUBLIC_API_URL` | frontend | optional override; defaults to `/api` (production) or `http://localhost:8000` (dev) | n/a |
 | `CORS_ORIGINS` | backend, local only | `http://localhost:3000` (default) | n/a |
 | `OCR_ENGINE` | backend | `rapidocr` (default) | n/a |
 
@@ -37,30 +37,16 @@ Never commit secrets. `vercel env pull` writes `.env.local`, which is git-ignore
 
 Done: Vercel project linked to GitHub, Neon provisioned, `main` protected (PR + green CI required to merge).
 
-## Adding the frontend (when Wenyi pushes `frontend/`)
+## Frontend service (added with PR #10)
 
-Add the service and a catch-all route to `vercel.json`. The `/api` rule must stay first:
-
-```json
-{
-  "services": {
-    "backend": { "...unchanged..." },
-    "frontend": { "root": "frontend" }
-  },
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": { "service": "backend" } },
-    { "source": "/(.*)", "destination": { "service": "frontend" } }
-  ]
-}
-```
-
-Then `vercel env add NEXT_PUBLIC_API_URL` with value `/api` for Production and Preview.
+`vercel.json` routes `/api/*` to the backend and everything else to the Next.js app in `frontend/`. The `/api` rule must stay first.
+The frontend picks its API address automatically: `/api` in production builds, `http://localhost:8000` in `npm run dev`. Set `NEXT_PUBLIC_API_URL` only to override that.
 
 ## Limits that affect the app
 
 | Limit | Value | Impact |
 |---|---|---|
-| Request body | **4.5 MB** | Phone photos are often bigger. **The frontend must resize or compress images to under 4 MB before upload**, or Vercel returns 413 before the API sees the request. 1600 px on the long side is plenty for OCR. |
+| Request body | **4.5 MB** | Phone photos are often bigger. The frontend shrinks anything over 4 MB to 1600 px (JPEG) before upload (`frontend/src/lib/image.ts`). Without that, Vercel returns 413 before the API sees the request. |
 | Cold start | ~12 s on the first OCR call | The ONNX models load once per instance. Hit `/api/health` and one `/api/ocr` call before the demo. |
 | Warm OCR | ~2 s | n/a |
 | Function bundle | ~250 MB (OpenCV, onnxruntime, models, numpy) | Well under Vercel's 5 GB limit |
