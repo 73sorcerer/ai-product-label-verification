@@ -129,7 +129,7 @@ export default function InspectPage() {
             className="w-full text-sm"
           />
           <p className="mt-1 text-xs text-zinc-500">
-            PNG, JPEG, WEBP, BMP or TIFF, max 10 MB.
+            PNG, JPEG, WEBP, BMP or TIFF. Photos over 4 MB are shrunk automatically before upload.
           </p>
         </div>
         {error && (

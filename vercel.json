@@ -5,9 +5,13 @@
       "root": "backend",
       "entrypoint": "app/main.py",
       "rewrites": [{ "source": "/api/:path(.*)?", "destination": "/:path" }]
+    },
+    "frontend": {
+      "root": "frontend"
     }
   },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": { "service": "backend" } }
+    { "source": "/api/(.*)", "destination": { "service": "backend" } },
+    { "source": "/(.*)", "destination": { "service": "frontend" } }
   ]
 }

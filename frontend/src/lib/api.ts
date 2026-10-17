@@ -2,6 +2,8 @@
 // The frontend and backend build against that file; if it changes,
 // update these types first.
 
+import { prepareImageForUpload } from "./image";
+
 export type ProductSpec = {
   id: number;
   name: string;
@@ -43,7 +45,11 @@ export type Inspection = {
   created_at: string;
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+// Deployed: frontend and API share one origin, with the API under /api (vercel.json).
+// Local dev: the API runs on :8000. NEXT_PUBLIC_API_URL overrides either.
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ??
+  (process.env.NODE_ENV === "production" ? "/api" : "http://localhost:8000");
 
 export class ApiError extends Error {
   status: number;
@@ -60,6 +66,7 @@ export function friendlyErrorMessage(err: unknown): string {
     if (err.status === 501)
       return "Backend route not implemented yet — the backend teammate is still building it.";
     if (err.status === 404) return "Not found.";
+    if (err.status === 413) return "That image is too large to upload. Try a smaller photo.";
     return err.message || `Request failed (HTTP ${err.status}).`;
   }
   if (err instanceof TypeError)
@@ -87,9 +94,9 @@ export const api = {
   health: () => request<{ status: string }>("/health"),
 
   /** OCR only, no comparison. Works now — useful while /inspections is a stub. */
-  ocr: (image: File) => {
+  ocr: async (image: File) => {
     const form = new FormData();
-    form.append("image", image);
+    form.append("image", await prepareImageForUpload(image));
     return request<OcrResult>("/ocr", { method: "POST", body: form });
   },
 
@@ -104,10 +111,10 @@ export const api = {
       body: JSON.stringify({ name, fields }),
     }),
 
-  createInspection: (specId: number, image: File) => {
+  createInspection: async (specId: number, image: File) => {
     const form = new FormData();
     form.append("spec_id", String(specId));
-    form.append("image", image);
+    form.append("image", await prepareImageForUpload(image));
     return request<Inspection>("/inspections", { method: "POST", body: form });
   },
 
