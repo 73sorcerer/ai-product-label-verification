@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   api,
   friendlyErrorMessage,
@@ -8,6 +8,10 @@ import {
   type OcrResult,
   type ProductSpec,
 } from "@/lib/api";
+import {
+  formatBytes,
+  prepareImage,
+} from "@/lib/image";
 import InspectionDetail, {
   LOW_CONFIDENCE_THRESHOLD,
 } from "@/components/InspectionDetail";
@@ -16,9 +20,13 @@ export default function InspectPage() {
   const [specs, setSpecs] = useState<ProductSpec[]>([]);
   const [specId, setSpecId] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [dragging, setDragging] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [compressNote, setCompressNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [inspection, setInspection] = useState<Inspection | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // OCR-only preview (POST /ocr works now; /inspections may still be a stub)
   const [ocrPreview, setOcrPreview] = useState<OcrResult | null>(null);
@@ -31,8 +39,7 @@ export default function InspectPage() {
         const list = await api.listSpecs();
         if (cancelled) return;
         setSpecs(list);
-        if (list.length > 0)
-          setSpecId((cur) => cur || String(list[0].id));
+        if (list.length > 0) setSpecId((cur) => cur || String(list[0].id));
       } catch (err) {
         if (!cancelled) setError(friendlyErrorMessage(err));
       }
@@ -42,11 +49,23 @@ export default function InspectPage() {
     };
   }, []);
 
+  const pickFile = (f: File | undefined) => {
+    if (!f) return;
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setFile(f);
+    setPreviewUrl(URL.createObjectURL(f));
+    setInspection(null);
+    setOcrPreview(null);
+    setCompressNote(null);
+    setError(null);
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setInspection(null);
     setOcrPreview(null);
+    setCompressNote(null);
     if (!specId) {
       setError("Pick a spec first.");
       return;
@@ -57,7 +76,15 @@ export default function InspectPage() {
     }
     setSubmitting(true);
     try {
-      setInspection(await api.createInspection(Number(specId), file));
+      const prepared = await prepareImage(file);
+      if (prepared.compressed) {
+        setCompressNote(
+          `Compressed ${formatBytes(prepared.originalBytes)} → ${formatBytes(
+            prepared.finalBytes
+          )} for upload.`
+        );
+      }
+      setInspection(await api.createInspection(Number(specId), prepared.file));
     } catch (err) {
       setError(friendlyErrorMessage(err));
     } finally {
@@ -70,7 +97,8 @@ export default function InspectPage() {
     setOcrLoading(true);
     setOcrPreview(null);
     try {
-      setOcrPreview(await api.ocr(file));
+      const prepared = await prepareImage(file);
+      setOcrPreview(await api.ocr(prepared.file));
     } catch (err) {
       setError(friendlyErrorMessage(err));
     } finally {
@@ -117,21 +145,70 @@ export default function InspectPage() {
             </p>
           )}
         </div>
+
         <div>
-          <label className="mb-1 block text-sm font-medium" htmlFor="image">
-            Label image
-          </label>
-          <input
-            id="image"
-            type="file"
-            accept="image/png,image/jpeg,image/webp,image/bmp,image/tiff"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="w-full text-sm"
-          />
+          <label className="mb-1 block text-sm font-medium">Label image</label>
+          <div
+            role="button"
+            tabIndex={0}
+            aria-label="Choose or drop a label photo"
+            onClick={() => inputRef.current?.click()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") inputRef.current?.click();
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragging(false);
+              pickFile(e.dataTransfer.files?.[0]);
+            }}
+            className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed px-6 py-10 text-center transition-colors ${
+              dragging
+                ? "border-zinc-950 bg-zinc-100 dark:border-zinc-50 dark:bg-zinc-900"
+                : "border-zinc-300 hover:border-zinc-400 dark:border-zinc-700 dark:hover:border-zinc-600"
+            }`}
+          >
+            {previewUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- blob: preview URL, next/image can't optimize it
+              <img
+                src={previewUrl}
+                alt="Label preview"
+                className="max-h-56 rounded-md object-contain"
+              />
+            ) : (
+              <>
+                <p className="text-sm font-medium">
+                  Drag &amp; drop a label photo here, or click to choose
+                </p>
+                <p className="mt-1 text-xs text-zinc-500">
+                  PNG, JPEG, WEBP, BMP or TIFF
+                </p>
+              </>
+            )}
+            <input
+              ref={inputRef}
+              id="image"
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/bmp,image/tiff"
+              className="hidden"
+              onChange={(e) => pickFile(e.target.files?.[0])}
+            />
+          </div>
+          {file && (
+            <p className="mt-2 text-xs text-zinc-500">
+              {file.name} · {formatBytes(file.size)}
+              {compressNote ? ` · ${compressNote}` : ""}
+            </p>
+          )}
           <p className="mt-1 text-xs text-zinc-500">
-            PNG, JPEG, WEBP, BMP or TIFF. Photos over 4 MB are shrunk automatically before upload.
+            Photos are automatically compressed below 4 MB before upload.
           </p>
         </div>
+
         {error && (
           <div className="rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
             {error}

@@ -1,35 +1,86 @@
-// Vercel rejects request bodies over 4.5 MB (docs/deployment.md), and phone photos are often
-// bigger. Shrink large images before upload; leave small ones untouched so OCR sees the original.
+// Client-side image prep: downscale/compress uploads so they stay under 4 MB
+// (Vercel request limit). Files already under the limit pass through untouched.
 
-const MAX_UPLOAD_BYTES = 4 * 1024 * 1024; // stay safely under Vercel's 4.5 MB limit
-const MAX_SIDE = 1600; // px on the long side; plenty for OCR (docs/deployment.md)
+export const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
 
-export async function prepareImageForUpload(file: File): Promise<File> {
-  if (file.size <= MAX_UPLOAD_BYTES) return file;
+export interface PreparedImage {
+  file: File;
+  compressed: boolean;
+  originalBytes: number;
+  finalBytes: number;
+}
 
-  let bitmap: ImageBitmap;
-  try {
-    // "from-image" applies EXIF rotation, so phone photos aren't sideways.
-    bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
-  } catch {
-    throw new Error(
-      "This image is over 4 MB and your browser can't shrink this format. Try a JPEG or PNG.",
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("Could not read the image file."));
+    img.src = src;
+  });
+}
+
+function canvasToBlob(
+  canvas: HTMLCanvasElement,
+  quality: number
+): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error("Could not encode image."))),
+      "image/jpeg",
+      quality
     );
-  }
+  });
+}
 
-  const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height));
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.round(bitmap.width * scale);
-  canvas.height = Math.round(bitmap.height * scale);
-  canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  bitmap.close();
-
-  const blob = await new Promise<Blob | null>((resolve) =>
-    canvas.toBlob(resolve, "image/jpeg", 0.85),
-  );
-  if (!blob || blob.size > MAX_UPLOAD_BYTES) {
-    throw new Error("Couldn't shrink this image under 4 MB. Try a smaller photo.");
+export async function prepareImage(file: File): Promise<PreparedImage> {
+  const originalBytes = file.size;
+  if (originalBytes <= MAX_UPLOAD_BYTES) {
+    return {
+      file,
+      compressed: false,
+      originalBytes,
+      finalBytes: originalBytes,
+    };
   }
-  const name = file.name.replace(/\.[^.]+$/, "") + ".jpg";
-  return new File([blob], name, { type: "image/jpeg" });
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await loadImage(url);
+    let width = img.width;
+    let height = img.height;
+    let quality = 0.85;
+    let blob: Blob | null = null;
+    for (let i = 0; i < 6; i++) {
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(width));
+      canvas.height = Math.max(1, Math.round(height));
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Canvas is not supported in this browser.");
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      blob = await canvasToBlob(canvas, quality);
+      if (blob.size <= MAX_UPLOAD_BYTES) break;
+      width *= 0.75;
+      height *= 0.75;
+      quality = Math.max(0.6, quality - 0.1);
+    }
+    if (!blob || blob.size > MAX_UPLOAD_BYTES) {
+      throw new Error("Could not compress the image below 4 MB.");
+    }
+    const out = new File([blob], file.name.replace(/\.\w+$/, "") + ".jpg", {
+      type: "image/jpeg",
+    });
+    return {
+      file: out,
+      compressed: true,
+      originalBytes,
+      finalBytes: out.size,
+    };
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+export function formatBytes(n: number): string {
+  return n >= 1024 * 1024
+    ? `${(n / 1024 / 1024).toFixed(1)} MB`
+    : `${Math.round(n / 1024)} KB`;
 }
