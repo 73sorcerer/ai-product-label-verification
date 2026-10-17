@@ -14,6 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  icons: { icon: { url: "/favicon.svg", type: "image/svg+xml" } },
   title: "VeriLabel — AI product label verification",
   description:
     "Upload a product label photo, verify it against the approved spec.",
