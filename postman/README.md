@@ -32,8 +32,8 @@ postman collection run postman/LabelGuard.postman_collection.json -e postman/loc
 
 1. **Import** both JSON files (File → Import).
 2. **Settings → General → Working directory**: choose this repo's root folder. Without it, every upload request fails, because Postman can't find the image files.
-3. Pick the **LabelGuard local** environment (top right).
-4. Right-click the collection → **Run collection** → **Run LabelGuard API**.
+3. Pick the **VeriLabel local** environment (top right).
+4. Right-click the collection → **Run collection** → **Run VeriLabel API**.
 
 ## What each run adds
 
