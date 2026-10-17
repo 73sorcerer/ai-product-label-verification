@@ -5,7 +5,7 @@
 - **Approved by:** Tray (Technical Lead)
 
 ## Context
-A subscription must belong to someone, but the app has no accounts: every visitor sees the same specs and inspections. If LabelGuard becomes a real product, the buyer is a **QA team**, not an individual.
+A subscription must belong to someone, but the app has no accounts: every visitor sees the same specs and inspections. If VeriLabel becomes a real product, the buyer is a **QA team**, not an individual.
 
 ## Decision
 

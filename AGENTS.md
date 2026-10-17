@@ -4,7 +4,7 @@ Instructions for AI coding agents (Muse Code, Claude Code, Copilot, Codex) worki
 Humans: see [README.md](README.md). Muse setup: [docs/muse-setup.md](docs/muse-setup.md).
 
 ## Project
-LabelGuard: save an approved product label spec, upload a label photo, OCR reads it, and each field is compared to the spec. Result: **pass** or **needs_review**, with a status per field (match / missing / incorrect / uncertain). CSE 651 team project; demo Oct 20, 2026.
+VeriLabel: save an approved product label spec, upload a label photo, OCR reads it, and each field is compared to the spec. Result: **pass** or **needs_review**, with a status per field (match / missing / incorrect / uncertain). CSE 651 team project; demo Oct 20, 2026.
 
 ## Rules
 - `docs/api-contract.md` is the interface authority. Don't change request/response shapes without editing that file in the same PR and saying so.

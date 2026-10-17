@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import Logo from "./Logo";
-import SampleBanner from "./SampleBanner";
 import Sidebar, { NAV_ITEMS, isNavActive } from "./Sidebar";
 
 function MarketingHeader() {
@@ -75,7 +74,6 @@ export default function AppShell({ children }: { children: ReactNode }) {
         <MobileNav />
         <main className="app-main w-full min-w-0 flex-1 px-4 py-6 sm:px-8 sm:py-8">
           {children}
-          <SampleBanner />
         </main>
       </div>
     </div>
