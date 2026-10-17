@@ -1,26 +1,78 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@theme {
+  --color-navy-950: #071224;
+  --color-navy-900: #0a1a33;
+  --color-navy-800: #142b52;
+  --color-navy-700: #1e3d6e;
+  --color-navy-200: #b7c7e3;
+  --color-navy-100: #d8e2f4;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-brand-700: #0a656a;
+  --color-brand-600: #0e7c82;
+  --color-brand-500: #129098;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-mist-50: #f4f8fc;
+  --color-mist-100: #e9f1f9;
+  --color-mist-200: #d8e5f4;
+
+  --color-ink-900: #0f1e33;
+  --color-ink-600: #3d5069;
+  --color-ink-500: #5d738d;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui,
+    -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-mist-50);
+  color: var(--color-ink-900);
+}
+
+/* Reusable card surface */
+.card {
+  background: #ffffff;
+  border: 1px solid #e3ecf6;
+  border-radius: 1rem;
+  box-shadow:
+    0 1px 2px rgba(15, 30, 51, 0.04),
+    0 10px 28px -14px rgba(15, 30, 51, 0.14);
+}
+
+/* Gentle float for the hero illustration */
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1.4deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(1.4deg);
+  }
+}
+
+.animate-float-soft {
+  animation: float-soft 7s ease-in-out infinite;
+}
+
+/* Soft entrance */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-rise {
+  animation: rise 0.7s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-soft,
+  .animate-rise {
+    animation: none;
+  }
 }
