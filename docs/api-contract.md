@@ -37,9 +37,10 @@ Create an approved product specification.
   "fields": { "brand": "Sunrise Farms", "net_contents": "Net Wt 12 oz (340 g)", "allergens": "Contains: Oats, Almonds, Milk" } }
 ```
 `201` → `ProductSpec`. `fields` is free-form: any key → expected text.
+`422` if `name` is blank or over 200 characters, `fields` is empty, or any key or value is blank or not a string. Surrounding whitespace is trimmed.
 
 ### `GET /specs` · `GET /specs/{id}`
-`200` → `ProductSpec[]` / `ProductSpec`; `404` if not found.
+`200` → `ProductSpec[]` (oldest first) / `ProductSpec`; `404` if not found.
 
 ### `POST /inspections`
 Upload a label and check it against a spec.
@@ -48,7 +49,8 @@ Upload a label and check it against a spec.
 - `404` unknown spec · `422` unreadable image
 
 ### `GET /inspections?spec_id=` · `GET /inspections/{id}`
-History, newest first. `200` → `Inspection[]` / `Inspection`.
+History, newest first. `200` → `Inspection[]` / `Inspection`; `404` if the inspection doesn't exist.
+An unknown `spec_id` filter returns `[]`, not `404`.
 
 ## Schemas
 
