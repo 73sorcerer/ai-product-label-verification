@@ -37,7 +37,8 @@ curl -F image=@../data/sample_labels/granola_correct.png http://localhost:8000/o
 
 ## Workflow
 - Branches: `feature/ocr-extraction`, `feature/backend-api`, `feature/frontend-upload`, `feature/deployment`
-- `main` is protected: open a PR, link the issue, include test results. The three required CI checks must pass. Ask a teammate to review when possible.
+- `main` is protected: open a PR, link the issue, include test results. The three required CI checks must pass, and the branch must be up to date with `main` (use **Update branch**). Ask a teammate to review when possible.
+- After your PR merges, start your next task on a **new branch from the latest `main`**. Don't keep committing to the merged one.
 - *MVP completeness* is a non-required check. It stays red until every route works, which is expected during the build.
 - Log AI agent usage in [docs/ai-usage.md](docs/ai-usage.md)
 
