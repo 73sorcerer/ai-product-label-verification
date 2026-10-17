@@ -1,23 +1,31 @@
 import type { FieldStatus, InspectionStatus } from "@/lib/api";
 
+function CheckIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" className={className} aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 8.5 6.5 12 13 4.5" />
+    </svg>
+  );
+}
+
+function AlertIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8 2 14.5 13.5h-13L8 2Z" />
+      <path strokeLinecap="round" d="M8 6.5v3.2" />
+      <circle cx="8" cy="11.6" r="0.9" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 const inspectionStyles: Record<InspectionStatus, string> = {
-  pass: "bg-green-100 text-green-900 border-green-300 dark:bg-green-900/30 dark:text-green-200 dark:border-green-700",
-  needs_review:
-    "bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-700",
+  pass: "border-[#bbe5c9] bg-[#e7f6ec] text-[#15803d]",
+  needs_review: "border-[#f5d9a8] bg-[#fdf0dc] text-[#b45309]",
 };
 
 const inspectionLabels: Record<InspectionStatus, string> = {
   pass: "Pass",
   needs_review: "Needs Review",
-};
-
-const fieldStyles: Record<FieldStatus, string> = {
-  match: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-  missing: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
-  incorrect:
-    "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
-  uncertain:
-    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
 };
 
 export function InspectionBadge({
@@ -29,21 +37,64 @@ export function InspectionBadge({
 }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full border font-semibold ${inspectionStyles[status]} ${
-        big ? "px-6 py-2 text-2xl" : "px-3 py-0.5 text-sm"
+      className={`inline-flex items-center gap-1.5 rounded-full border font-semibold ${inspectionStyles[status]} ${
+        big ? "px-5 py-2 text-xl" : "px-3 py-1 text-sm"
       }`}
     >
+      {status === "pass" ? <CheckIcon /> : <AlertIcon />}
       {inspectionLabels[status]}
     </span>
   );
 }
 
+const fieldConfig: Record<
+  FieldStatus,
+  { label: string; classes: string; icon: "check" | "alert" | "x" }
+> = {
+  match: {
+    label: "Match",
+    classes: "border-[#bbe5c9] bg-[#e7f6ec] text-[#15803d]",
+    icon: "check",
+  },
+  incorrect: {
+    label: "Mismatch",
+    classes: "border-[#f3b8b8] bg-[#fdecec] text-[#c22727]",
+    icon: "x",
+  },
+  missing: {
+    label: "Missing",
+    classes: "border-[#f3b8b8] bg-[#fdecec] text-[#c22727]",
+    icon: "x",
+  },
+  uncertain: {
+    label: "Uncertain",
+    classes: "border-[#f5d9a8] bg-[#fdf0dc] text-[#b45309]",
+    icon: "alert",
+  },
+};
+
+function XIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" className="h-3.5 w-3.5" aria-hidden="true">
+      <path strokeLinecap="round" d="M4 4l8 8M12 4l-8 8" />
+    </svg>
+  );
+}
+
 export function FieldBadge({ status }: { status: FieldStatus }) {
+  const cfg = fieldConfig[status];
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${fieldStyles[status]}`}
+      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${cfg.classes}`}
     >
-      {status.replace("_", " ")}
+      {cfg.icon === "check" ? (
+        <CheckIcon className="h-3.5 w-3.5" />
+      ) : cfg.icon === "alert" ? (
+        <AlertIcon className="h-3.5 w-3.5" />
+      ) : (
+        <XIcon />
+      )}
+      {cfg.label}
     </span>
   );
 }
