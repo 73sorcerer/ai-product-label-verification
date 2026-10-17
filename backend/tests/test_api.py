@@ -1,11 +1,17 @@
-"""API tests.  OWNER: Amzad (stub; replace the 501 checks as routes are implemented)."""
+"""API tests for /health and /ocr.  OWNER: Amzad
+/specs and /inspections live in test_specs.py and test_inspections.py.
+"""
 from pathlib import Path
 
 SAMPLE = Path(__file__).resolve().parents[2] / "data" / "sample_labels" / "granola_correct.png"
 
 
 def test_health(client):
-    assert client.get("/health").json() == {"status": "ok", "database": "sqlite", "commit": "local"}
+    from app.database import engine
+
+    assert client.get("/health").json() == {
+        "status": "ok", "database": engine.dialect.name, "commit": "local"
+    }
 
 
 def test_ocr_endpoint_returns_text(client):
@@ -17,9 +23,3 @@ def test_ocr_endpoint_returns_text(client):
 def test_ocr_endpoint_rejects_non_image(client):
     r = client.post("/ocr", files={"image": ("x.txt", b"hello", "text/plain")})
     assert r.status_code == 422
-
-
-def test_unimplemented_routes_are_501(client):
-    # TODO(Amzad): delete this once the routes are implemented.
-    assert client.get("/specs").status_code == 501
-    assert client.get("/inspections").status_code == 501

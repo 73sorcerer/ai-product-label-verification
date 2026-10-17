@@ -13,6 +13,10 @@ on:
       base_url:
         description: "API base URL"
         default: "https://ai-product-label-verification.vercel.app/api"
+      full:
+        description: "Also run tests that CREATE specs + inspections (adds rows to that database)"
+        type: boolean
+        default: false
 
 jobs:
   e2e-deployed:
@@ -20,6 +24,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       E2E_BASE_URL: ${{ inputs.base_url || 'https://ai-product-label-verification.vercel.app/api' }}
+      # Read-only by default: don't fill the live demo database with test data on every merge.
+      E2E_READONLY: ${{ inputs.full && '0' || '1' }}
     steps:
       - uses: actions/checkout@v4
       - name: Wait for production to serve this commit
