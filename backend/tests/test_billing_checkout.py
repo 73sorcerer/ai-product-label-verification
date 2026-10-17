@@ -13,8 +13,9 @@ def test_checkout_returns_stripe_url(client, fake_stripe):
     assert r.json() == {"url": "https://checkout.stripe.test/c/s_123"}
 
 
-def test_checkout_params(client, fake_stripe):
+def test_checkout_params(client, fake_stripe, monkeypatch):
     stripe = fake_stripe()
+    monkeypatch.setenv("PUBLIC_URL", "https://example.test")
     r = client.post("/billing/checkout", json=BODY, headers={"Origin": "https://example.test"})
     assert r.status_code == 200
     [params] = stripe.v1.checkout.sessions.create.calls
@@ -64,3 +65,21 @@ def test_missing_price_502(client, fake_stripe):
     r = client.post("/billing/checkout", json=BODY)
     assert r.status_code == 502
     assert r.json()["detail"] == "Stripe price not found"
+
+
+def test_untrusted_origin_cannot_redirect_payer(client, fake_stripe, monkeypatch):
+    """Security review: the Origin header is caller-controlled; Stripe must never redirect a payer to it."""
+    monkeypatch.setenv("PUBLIC_URL", "https://ai-product-label-verification.vercel.app")
+    stripe = fake_stripe()
+    client.post("/billing/checkout", json=BODY, headers={"Origin": "https://evil.example"})
+    [params] = stripe.v1.checkout.sessions.create.calls
+    assert params["success_url"].startswith("https://ai-product-label-verification.vercel.app/billing/success")
+    assert params["cancel_url"] == "https://ai-product-label-verification.vercel.app/pricing"
+
+
+def test_allowed_origin_is_used(client, fake_stripe, monkeypatch):
+    monkeypatch.setenv("PUBLIC_URL", "https://ai-product-label-verification.vercel.app")
+    monkeypatch.setenv("CORS_ORIGINS", "http://localhost:3000")
+    stripe = fake_stripe()
+    client.post("/billing/checkout", json=BODY, headers={"Origin": "http://localhost:3000"})
+    assert stripe.v1.checkout.sessions.create.calls[0]["cancel_url"] == "http://localhost:3000/pricing"
