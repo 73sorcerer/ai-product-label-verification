@@ -5,19 +5,18 @@
   border: 0;
   background: transparent;
   cursor: pointer;
-  touch-action: pan-y;
+  touch-action: none;
   -webkit-tap-highlight-color: transparent;
 }
 .hot-sauce-art { position: absolute; inset: 0 0 56px; display: block; }
 .hot-sauce-poster { display: block; width: 100%; height: 100%; object-fit: contain; user-select: none; }
 .hot-sauce-art[data-ready="true"] .hot-sauce-poster { visibility: hidden; }
 .hot-sauce-canvas { position: absolute; inset: 0; display: block; pointer-events: none; }
-.hot-sauce-canvas canvas { display: block; width: 100%; height: 100%; }
+.hot-sauce-canvas canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 .hot-sauce-product { position: relative; }
 .hot-sauce-controls { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; padding: 2px; border: 1px solid #cde8ee; border-radius: 24px; background: #f5fcfff2; box-shadow: 0 3px 12px #244c6510; white-space: nowrap; }
 .hot-sauce-controls button { display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 30px; height: 28px; border-radius: 20px; color: #18637b; cursor: pointer; }
 .hot-sauce-controls button:hover { background: #dceff6; }
-.hot-sauce-controls button:disabled { opacity: .3; cursor: default; }
 .hot-sauce-controls .hot-sauce-reset { padding: 0 4px; font-size: 10px; }
 .hot-sauce-hint { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; padding: 7px 12px; border: 1px solid #cde8ee; border-radius: 999px; background: #f5fcffed; color: #18637b; font-size: 11px; box-shadow: 0 3px 12px #244c6510; }
 .hot-sauce-popup { position: absolute; z-index: 5; left: 66%; top: 58px; width: 270px; animation: hot-sauce-appear 220ms cubic-bezier(.2,.8,.2,1) both; transform-origin: 0 50%; }
