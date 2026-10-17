@@ -16,3 +16,4 @@
 | 2026-10-16 | Tray | Codex | Mockup step 2: full-width shell | Removed app max-width and footer, added navy sidebar user block; compared all page screenshots |
 | 2026-10-16 | Tray | Codex | Mockup step 3: landing page | Added full nav, wide hero, generated angled bottle, soft hexagon background, separate Pass card, compact feature row; browser comparison complete |
 | 2026-10-16 | Tray | Codex | Mockup step 4: specifications | Built searchable two-pane spec workspace, product thumbnails, selection, status/version metadata, tabs, notes table, menus, and add-field/new-spec form; lint and TypeScript pass, screenshot compared |
+| 2026-10-16 | Tray | Codex | Mockup step 5: inspection | Added thumbnail/status/version picker, separate upload preview and metadata, compact six-field result with 5 checked and 0.45 uncertain barcode, timestamp and evidence crop; lint/TypeScript and browser upload flow pass |
