@@ -87,6 +87,20 @@ Use the local test pack (`artifacts/web-label-test-pack.zip`, **not in the repo*
 | P1 | | | | | |
 | P2 | | | | | |
 
+## 6. Pricing and billing (Stripe test mode)
+
+| # | Test | Expected | Actual | Result |
+|---|---|---|---|---|
+| B1 | Open **Pricing** from the nav | 3 plans: Starter $49, Professional $149 (Most popular), Enterprise $499; limits listed; "14-day free trial" | | |
+| B2 | Toggle **Annual** | Prices show per-month equivalent ($40.83 / $124.17 / $415.83) billed annually, "2 months free" | | |
+| B3 | Professional → **Start 14-day trial** → card 4242 4242 4242 4242 | Stripe Checkout opens; after paying you land on "Confirming your subscription…", then "You're on Professional" within seconds | | |
+| B4 | Sidebar after B3 | Plan badge "Professional · Trial" + **Manage billing** | | |
+| B5 | **Manage billing** | Stripe Customer Portal opens for this subscription; switch plan / cancel works; badge updates after returning | | |
+| B6 | Try **Start trial** again while subscribed | Message to use Manage billing; no second checkout | | |
+| B7 | Card 4000 0025 0000 3155 | 3-D Secure challenge, then success | | |
+| B8 | Cancel on the Stripe Checkout page | Back on /pricing, nothing changed | | |
+| B9 | Clear cookies, open the success page | No plan shown (the subscription stays in Stripe; known limitation: no accounts) | | |
+
 ## Bug report format
 
 File each bug as a GitHub issue labeled `qa`:

@@ -54,3 +54,23 @@ sequenceDiagram
 
 ## Deployment
 One Vercel project: `/api/*` → FastAPI service, `/*` → Next.js service, same origin. Details: [deployment.md](deployment.md).
+
+## Billing flow (ADR 0003 / 0004)
+
+```mermaid
+sequenceDiagram
+  actor U as Visitor
+  participant FE as /pricing
+  participant API as FastAPI /billing
+  participant S as Stripe
+  participant DB as Postgres
+  U->>FE: Start 14-day trial (Professional)
+  FE->>API: POST /billing/checkout (lg_workspace cookie)
+  API->>S: Checkout Session (subscription, trial, client_reference_id = workspace)
+  API-->>FE: url
+  FE->>S: redirect; pays with test card
+  S-->>U: back to /billing/success (polls /billing/status)
+  S->>API: webhook (signed): checkout.session.completed, customer.subscription.*, invoice.*
+  API->>DB: upsert subscriptions (only writer)
+  FE->>API: GET /billing/status -> plan shown
+```

@@ -64,3 +64,18 @@ def test_inspection_verdict_matches_manifest(api, spec_ids, sample):
     assert saved.json()["status"] == inspection["status"]
     history = require_implemented(api.get("/inspections")).json()
     assert inspection["id"] in [i["id"] for i in history]
+
+
+def test_plans_catalog(api):
+    """Read-only (runs against production too): the three tiers at the ADR 0003 prices."""
+    r = api.get("/plans")
+    assert r.status_code == 200, r.text
+    assert [p["id"] for p in r.json()] == ["starter", "professional", "enterprise"]
+    assert [p["monthly_cents"] for p in r.json()] == [4900, 14900, 49900]
+
+
+def test_billing_status_is_readable(api):
+    """Read-only: an unknown visitor has no plan (all null), never an error."""
+    r = api.get("/billing/status")
+    assert r.status_code == 200, r.text
+    assert r.json()["plan"] is None
