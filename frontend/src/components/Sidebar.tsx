@@ -4,47 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import Logo from "./Logo";
-
-function HomeIcon() {
-  return (
-    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" className="h-5 w-5" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3 10.5 10 3.5l7 7M5 9.5V17h4v-4h2v4h4V9.5" />
-    </svg>
-  );
-}
-
-function SpecsIcon() {
-  return (
-    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" className="h-5 w-5" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6 2.5h5.5L15 6v11.5H6V2.5Z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M11.5 2.5V6H15M8.5 10h4M8.5 12.8h4" />
-    </svg>
-  );
-}
-
-function InspectIcon() {
-  return (
-    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" className="h-5 w-5" aria-hidden="true">
-      <circle cx="9" cy="9" r="5.5" />
-      <path strokeLinecap="round" d="M13.5 13.5 17 17" />
-    </svg>
-  );
-}
-
-function HistoryIcon() {
-  return (
-    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" className="h-5 w-5" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3.5 10a6.5 6.5 0 1 1 1.9 4.6M3.5 10V6.8M3.5 10h3.2" />
-      <path strokeLinecap="round" d="M10 6.5V10l2.6 1.6" />
-    </svg>
-  );
-}
+import { House, ClipboardCheck, ScanText, History, ChevronRight } from "lucide-react";
 
 export const NAV_ITEMS: { href: string; label: string; icon: ReactNode }[] = [
-  { href: "/", label: "Home", icon: <HomeIcon /> },
-  { href: "/specs", label: "Specs", icon: <SpecsIcon /> },
-  { href: "/inspect", label: "Inspect", icon: <InspectIcon /> },
-  { href: "/history", label: "History", icon: <HistoryIcon /> },
+  { href: "/", label: "Home", icon: <House size={20} strokeWidth={1.75} aria-hidden="true" /> },
+  { href: "/specs", label: "Specs", icon: <ClipboardCheck size={20} strokeWidth={1.75} aria-hidden="true" /> },
+  { href: "/inspect", label: "Inspect", icon: <ScanText size={20} strokeWidth={1.75} aria-hidden="true" /> },
+  { href: "/history", label: "History", icon: <History size={20} strokeWidth={1.75} aria-hidden="true" /> },
 ];
 
 export function isNavActive(pathname: string, href: string) {
@@ -81,8 +47,8 @@ export default function Sidebar() {
       </nav>
       <div className="mt-auto flex items-center gap-3 px-2 text-sm text-white">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#c8ddef] text-xs font-semibold text-[#234361]">TB</span>
-        <div><p>Tray Branch <span className="ml-1 text-navy-200">›</span></p><p className="text-xs text-navy-200">Team</p></div>
-        <span aria-hidden="true" className="ml-auto text-navy-200">›</span>
+        <div><p>Tray Branch</p><p className="text-xs text-navy-200">Team</p></div>
+        <ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" className="ml-auto text-navy-200" />
       </div>
     </aside>
   );

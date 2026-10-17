@@ -27,7 +27,7 @@ function MobileNav() {
         </Link>
       </div>
       <nav
-        className="flex gap-1 overflow-x-auto px-4 pb-3"
+        className="grid grid-cols-4 gap-1 px-3 pb-3"
         aria-label="Primary"
       >
         {NAV_ITEMS.map((item) => {
@@ -37,7 +37,7 @@ function MobileNav() {
               key={item.href}
               href={item.href}
               aria-current={active ? "page" : undefined}
-              className={`flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium ${
+              className={`flex items-center justify-center gap-1.5 rounded-lg px-1 py-2 text-xs font-medium sm:text-sm ${
                 active
                   ? "bg-navy-800 text-white"
                   : "text-navy-200 hover:text-white"
@@ -59,9 +59,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   if (isHome) {
     return (
-      <div className="marketing-shell flex min-h-screen flex-col bg-white">
+      <div className="marketing-shell flex flex-col bg-white">
         <MarketingHeader />
-        <main className="flex-1">{children}</main>
+        <main>{children}</main>
+        <footer className="marketing-footer">VeriLabel <span aria-hidden="true">·</span> AI product label verification</footer>
 
       </div>
     );
