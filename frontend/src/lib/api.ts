@@ -1,3 +1,4 @@
+import { fixtureRequest, type InspectionRecord } from "./mock-data";
 // Types copied from docs/api-contract.md — keep in sync with the backend.
 // The frontend and backend build against that file; if it changes,
 // update these types first.
@@ -58,11 +59,26 @@ export class ApiError extends Error {
   }
 }
 
+let sampleMode = process.env.NEXT_PUBLIC_USE_MOCKS === "true";
+const sampleListeners = new Set<() => void>();
+export const isSampleMode = () => sampleMode;
+export function subscribeSampleMode(listener: () => void) {
+  sampleListeners.add(listener);
+  return () => { sampleListeners.delete(listener); };
+}
+function sampleResponse<T>(path: string, init?: RequestInit): T {
+  const data = fixtureRequest(path, init);
+  if (data === undefined) throw new ApiError(404, "Sample record not found.");
+  sampleMode = true;
+  sampleListeners.forEach(listener => listener());
+  return structuredClone(data) as T;
+}
+
 /** Turn any fetch failure into a short, human-readable message. */
 export function friendlyErrorMessage(err: unknown): string {
   if (err instanceof ApiError) {
     if (err.status === 501)
-      return "Backend route not implemented yet — the backend teammate is still building it.";
+      return "This action is not available yet.";
     if (err.status === 404) return "Not found.";
     if (err.status === 413) return "That image is too large to upload. Try a smaller photo.";
     return err.message || `Request failed (HTTP ${err.status}).`;
@@ -74,7 +90,10 @@ export function friendlyErrorMessage(err: unknown): string {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const hasFixture = /^\/(specs|inspections)(\/|\?|$)/.test(path);
+  if (hasFixture && (process.env.NEXT_PUBLIC_USE_MOCKS === "true" || sampleMode)) return sampleResponse<T>(path, init);
   const res = await fetch(`${API_BASE}${path}`, init);
+  if (res.status === 501 && hasFixture) return sampleResponse<T>(path, init);
   if (!res.ok) {
     let detail = "";
     try {
@@ -114,13 +133,13 @@ export const api = {
     const form = new FormData();
     form.append("spec_id", String(specId));
     form.append("image", image);
-    return request<Inspection>("/inspections", { method: "POST", body: form });
+    return request<InspectionRecord>("/inspections", { method: "POST", body: form });
   },
 
   listInspections: (specId?: number) =>
-    request<Inspection[]>(
+    request<InspectionRecord[]>(
       specId != null ? `/inspections?spec_id=${specId}` : "/inspections",
     ),
 
-  getInspection: (id: number) => request<Inspection>(`/inspections/${id}`),
+  getInspection: (id: number) => request<InspectionRecord>(`/inspections/${id}`),
 };

@@ -4,33 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import Logo from "./Logo";
+import SampleBanner from "./SampleBanner";
 import Sidebar, { NAV_ITEMS, isNavActive } from "./Sidebar";
 
 function MarketingHeader() {
-  return (
-    <header className="sticky top-0 z-30 border-b border-mist-200 bg-white/90 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
-        <Link href="/" aria-label="VeriLabel home">
-          <Logo variant="dark" />
-        </Link>
-        <div className="flex flex-wrap items-center gap-2.5">
-          <Link
-            href="/inspect?demo=1"
-            className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700"
-          >
-            Try a Sample Inspection
-            <span aria-hidden="true">→</span>
-          </Link>
-          <Link
-            href="/specs"
-            className="inline-flex items-center rounded-xl border border-mist-200 bg-white px-4 py-2.5 text-sm font-semibold text-navy-900 transition-colors hover:border-brand-600 hover:text-brand-700"
-          >
-            Create a Specification
-          </Link>
-        </div>
-      </div>
-    </header>
-  );
+  return <header className="marketing-header">
+    <Link href="/" aria-label="VeriLabel home" className="home-brand"><Logo variant="light" /></Link>
+    <nav aria-label="Product navigation" className="marketing-links">
+      <a href="#product">Product</a><a href="#solutions">Solutions</a><a href="#resources">Resources</a><a href="#pricing">Pricing</a>
+    </nav>
+    <div className="marketing-actions"><Link href="/specs" className="outline-button">Sign in</Link><Link href="/specs?new=1" className="primary-button">Request a pilot</Link></div>
+  </header>;
 }
 
 function MobileNav() {
@@ -75,12 +59,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   if (isHome) {
     return (
-      <div className="flex min-h-screen flex-col bg-white">
+      <div className="marketing-shell flex min-h-screen flex-col bg-white">
         <MarketingHeader />
         <main className="flex-1">{children}</main>
-        <footer className="border-t border-mist-200 py-6 text-center text-sm text-ink-500">
-          VeriLabel · AI product label verification · CSE 651
-        </footer>
+
       </div>
     );
   }
@@ -90,12 +72,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
       <Sidebar />
       <div className="flex min-h-screen flex-col lg:pl-60">
         <MobileNav />
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
+        <main className="app-main w-full min-w-0 flex-1 px-4 py-6 sm:px-8 sm:py-8">
           {children}
+          <SampleBanner />
         </main>
-        <footer className="py-6 text-center text-xs text-ink-500">
-          VeriLabel · CSE 651 demo
-        </footer>
       </div>
     </div>
   );

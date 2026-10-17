@@ -1,30 +1,12 @@
 "use client";
-
+/* eslint-disable @next/next/no-img-element -- blob previews and local product images */
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import {
-  api,
-  friendlyErrorMessage,
-  type Inspection,
-  type OcrResult,
-  type ProductSpec,
-} from "@/lib/api";
-import {
-  formatBytes,
-  MAX_LONGEST_SIDE_PX,
-  MAX_UPLOAD_BYTES,
-  prepareImage,
-} from "@/lib/image";
-import { MOCK_INSPECTION } from "@/lib/mock";
-import InspectionDetail, {
-  LOW_CONFIDENCE_THRESHOLD,
-} from "@/components/InspectionDetail";
+import { api, friendlyErrorMessage, type ProductSpec } from "@/lib/api";
+import { MOCK_INSPECTION, specPresentation, type InspectionRecord } from "@/lib/mock-data";
+import { formatBytes, prepareImage } from "@/lib/image";
+import InspectionDetail from "@/components/InspectionDetail";
 
-/**
- * Crop the uploaded image bytes to an OCR bounding box, with a little
- * padding for context. Used only for real inspections — never for the
- * clearly-labeled demo mock, whose bboxes are placeholders.
- */
 async function cropToBbox(
   file: File,
   bbox: [number, number, number, number]
@@ -60,407 +42,65 @@ async function cropToBbox(
 }
 
 function InspectContent() {
-  const [specs, setSpecs] = useState<ProductSpec[]>([]);
-  const [specId, setSpecId] = useState<string>("");
-  const [file, setFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [dragging, setDragging] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [compressNote, setCompressNote] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [inspection, setInspection] = useState<Inspection | null>(null);
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [evidenceUrl, setEvidenceUrl] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const searchParams = useSearchParams();
-
-  // OCR-only preview (POST /ocr works now; /inspections may still be a stub)
-  const [ocrPreview, setOcrPreview] = useState<OcrResult | null>(null);
-  const [ocrLoading, setOcrLoading] = useState(false);
-
-  // Demo-only mock results, shown while POST /inspections is still a stub.
-  // ?demo=1 (homepage "Try a Sample Inspection" CTA) opens them on load.
-  const [mockShown, setMockShown] = useState(
-    () => searchParams.get("demo") === "1"
-  );
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const list = await api.listSpecs();
-        if (cancelled) return;
-        setSpecs(list);
-        if (list.length > 0) setSpecId((cur) => cur || String(list[0].id));
-      } catch (err) {
-        if (!cancelled) setError(friendlyErrorMessage(err));
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  // Build the evidence thumbnail for real inspections only.
-  // (Reset happens in pickFile/submit; this effect only sets on success.)
-  useEffect(() => {
-    let cancelled = false;
-    if (!inspection || !uploadedFile) return;
-    (async () => {
-      const flagged =
-        inspection.results.find((r) => r.status === "incorrect") ??
-        inspection.results.find((r) => r.status === "uncertain") ??
-        null;
-      if (!flagged?.found) return;
-      const line = inspection.ocr.lines.find((li) => li.text === flagged.found);
-      if (!line) return;
-      const dataUrl = await cropToBbox(uploadedFile, line.bbox);
-      if (!cancelled) setEvidenceUrl(dataUrl);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [inspection, uploadedFile]);
-
-  const pickFile = (f: File | undefined) => {
-    if (!f) return;
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setFile(f);
-    setPreviewUrl(URL.createObjectURL(f));
-    setInspection(null);
-    setUploadedFile(null);
-    setEvidenceUrl(null);
-    setOcrPreview(null);
-    setCompressNote(null);
-    setMockShown(false);
-    setError(null);
-  };
-
-  const removeFile = () => {
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setFile(null);
-    setPreviewUrl(null);
-    setCompressNote(null);
-    if (inputRef.current) inputRef.current.value = "";
-  };
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setInspection(null);
-    setUploadedFile(null);
-    setEvidenceUrl(null);
-    setOcrPreview(null);
-    setCompressNote(null);
-    setMockShown(false);
-    if (!specId) {
-      setError("Pick a spec first.");
-      return;
-    }
-    if (!file) {
-      setError("Choose a label image to upload.");
-      return;
-    }
-    setSubmitting(true);
+  const demo = searchParams.get("demo") === "1";
+  const [specs, setSpecs] = useState<ProductSpec[]>([]);
+  const [specId, setSpecId] = useState<number | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(demo ? "/products/granola-label.png" : null);
+  const [inspection, setInspection] = useState<InspectionRecord | null>(demo ? MOCK_INSPECTION : null);
+  const [evidence, setEvidence] = useState<string | null>(null);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const [compressNote, setCompressNote] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const pickerRef = useRef<HTMLDetailsElement>(null);
+  useEffect(()=>{let active=true;api.listSpecs().then(list=>{if(active){setSpecs(list);setSpecId(list[0]?.id??null);}}).catch(e=>{if(active)setError(friendlyErrorMessage(e));});return()=>{active=false;};},[]);
+  useEffect(()=>()=>{if(preview?.startsWith("blob:"))URL.revokeObjectURL(preview);},[preview]);
+  const selected = specs.find(s=>s.id===specId);
+  function pickFile(f?: File) {
+    if(!f)return;
+    if(!/image\/(png|jpeg|webp|bmp|tiff)/.test(f.type)){setError("Choose a PNG, JPEG, WEBP, BMP or TIFF photo.");return;}
+    setFile(f);setPreview(URL.createObjectURL(f));setInspection(null);setEvidence(null);setCompressNote("");setError("");
+  }
+  function removeFile(){setFile(null);setPreview(null);setInspection(null);setEvidence(null);setCompressNote("");if(inputRef.current)inputRef.current.value="";}
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();setError("");
+    if(!specId){setError("Pick a product specification first.");return;}
+    if(!file && demo && preview){setInspection(MOCK_INSPECTION);return;}
+    if(!file){setError("Choose a label photo to upload.");return;}
+    setBusy(true);setInspection(null);setEvidence(null);setCompressNote("");
     try {
-      const prepared = await prepareImage(file);
-      if (prepared.compressed) {
-        setCompressNote(
-          `Compressed ${formatBytes(prepared.originalBytes)} → ${formatBytes(
-            prepared.finalBytes
-          )} for upload.`
-        );
-      }
-      const result = await api.createInspection(
-        Number(specId),
-        prepared.file
-      );
-      setUploadedFile(prepared.file);
-      setInspection(result);
-    } catch (err) {
-      setError(friendlyErrorMessage(err));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const previewOcr = async () => {
-    if (!file) return;
-    setOcrLoading(true);
-    setOcrPreview(null);
-    try {
-      const prepared = await prepareImage(file);
-      setOcrPreview(await api.ocr(prepared.file));
-    } catch (err) {
-      setError(friendlyErrorMessage(err));
-    } finally {
-      setOcrLoading(false);
-    }
-  };
-
-  const selectedSpec = specs.find((s) => String(s.id) === specId) ?? null;
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-navy-900 sm:text-3xl">
-          New inspection
-        </h1>
-        <p className="mt-1 text-sm text-ink-600">
-          Select a product specification, upload a label photo, and get
-          verification results.
-        </p>
-      </div>
-
-      <div className="grid items-start gap-5 lg:grid-cols-[380px_minmax(0,1fr)]">
-        {/* Left: input steps */}
-        <section className="card p-5 sm:p-6">
-          <form onSubmit={submit} className="space-y-6">
-            <div>
-              <p className="text-sm font-semibold text-navy-900">
-                1. Select product spec
-              </p>
-              <select
-                value={specId}
-                onChange={(e) => setSpecId(e.target.value)}
-                aria-label="Product spec"
-                className="mt-2 w-full rounded-xl border border-mist-200 bg-white px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-brand-600"
-              >
-                {specs.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name} (#{s.id})
-                  </option>
-                ))}
-              </select>
-              {specs.length === 0 ? (
-                <p className="mt-1.5 text-xs text-ink-500">
-                  No specs yet — create one on the{" "}
-                  <a href="/specs" className="font-medium text-brand-700 underline">
-                    Specs
-                  </a>{" "}
-                  page.
-                </p>
-              ) : (
-                selectedSpec && (
-                  <p className="mt-1.5 text-xs text-ink-500">
-                    {Object.keys(selectedSpec.fields).length} fields ·{" "}
-                    {selectedSpec.name}
-                  </p>
-                )
-              )}
-            </div>
-
-            <div>
-              <p className="text-sm font-semibold text-navy-900">
-                2. Upload label photo
-              </p>
-              <div
-                role="button"
-                tabIndex={0}
-                aria-label="Choose or drop a label photo"
-                onClick={() => inputRef.current?.click()}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ")
-                    inputRef.current?.click();
-                }}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setDragging(true);
-                }}
-                onDragLeave={() => setDragging(false)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  setDragging(false);
-                  pickFile(e.dataTransfer.files?.[0]);
-                }}
-                className={`mt-2 flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-8 text-center transition-colors ${
-                  dragging
-                    ? "border-brand-600 bg-[#eef7f7]"
-                    : "border-mist-200 bg-mist-50/60 hover:border-brand-500"
-                }`}
-              >
-                {previewUrl ? (
-                  <span className="relative block">
-                    {/* eslint-disable-next-line @next/next/no-img-element -- blob: preview URL, next/image can't optimize it */}
-                    <img
-                      src={previewUrl}
-                      alt="Label preview"
-                      className="max-h-52 rounded-xl border border-mist-200 object-contain"
-                    />
-                    <button
-                      type="button"
-                      aria-label="Remove photo"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeFile();
-                      }}
-                      className="absolute -right-2.5 -top-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-navy-900 text-sm text-white shadow transition-colors hover:bg-[#c22727]"
-                    >
-                      ✕
-                    </button>
-                  </span>
-                ) : (
-                  <>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-9 w-9 text-brand-600" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 16V6m0 0-4 4m4-4 4 4" />
-                      <path strokeLinecap="round" d="M4 17v1.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V17" />
-                    </svg>
-                    <p className="mt-3 text-sm font-semibold text-navy-900">
-                      Drag &amp; drop a label photo here
-                      <br />
-                      <span className="font-normal text-ink-500">
-                        or click to choose
-                      </span>
-                    </p>
-                    <p className="mt-1.5 text-xs text-ink-500">
-                      PNG, JPEG, WEBP, BMP or TIFF
-                      <br />
-                      (Max 4 MB, auto-resized to 1600px)
-                    </p>
-                  </>
-                )}
-                <input
-                  ref={inputRef}
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp,image/bmp,image/tiff"
-                  className="hidden"
-                  aria-label="Label photo file"
-                  onChange={(e) => pickFile(e.target.files?.[0])}
-                />
-              </div>
-              {file && (
-                <p className="mt-2 text-xs text-ink-500">
-                  {file.name} · {formatBytes(file.size)}
-                  {compressNote ? ` · ${compressNote}` : ""}
-                </p>
-              )}
-              <p className="mt-1.5 text-xs leading-relaxed text-ink-500">
-                Photos are automatically resized and compressed below{" "}
-                {formatBytes(MAX_UPLOAD_BYTES)} (max {MAX_LONGEST_SIDE_PX}px on
-                the longest side) before upload.
-              </p>
-            </div>
-
-            {error && (
-              <div className="rounded-xl border border-[#f5d9a8] bg-[#fffaf0] px-4 py-3 text-sm text-[#9a4a0a]">
-                {error}
-                {error.includes("not implemented") && file && (
-                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
-                    <button
-                      type="button"
-                      onClick={() => void previewOcr()}
-                      disabled={ocrLoading}
-                      className="font-semibold underline disabled:opacity-50"
-                    >
-                      {ocrLoading
-                        ? "Reading text…"
-                        : "Preview OCR text only (works now)"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setMockShown(true)}
-                      className="font-semibold underline"
-                    >
-                      View sample results (demo)
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-brand-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 disabled:opacity-50"
-            >
-              {submitting ? (
-                "Verifying…"
-              ) : (
-                <>
-                  Verify Label <span aria-hidden="true">→</span>
-                </>
-              )}
-            </button>
-          </form>
-        </section>
-
-        {/* Right: results */}
-        <div className="min-w-0 space-y-6">
-          {mockShown && (
-            <div>
-              <div className="mb-4 rounded-xl border-2 border-dashed border-brand-600/50 bg-[#eef7f7] px-4 py-3 text-sm text-ink-600">
-                <span className="font-bold text-brand-700">
-                  Sample results — demo only.
-                </span>{" "}
-                The inspection API isn&apos;t ready yet, so this is placeholder
-                data to show the layout.
-              </div>
-              <InspectionDetail inspection={MOCK_INSPECTION} />
-            </div>
-          )}
-
-          {!mockShown && inspection && (
-            <InspectionDetail
-              inspection={inspection}
-              evidenceUrl={evidenceUrl}
-            />
-          )}
-
-          {!mockShown && !inspection && ocrPreview && (
-            <section className="card p-5 sm:p-6">
-              <h2 className="text-base font-semibold text-navy-900">
-                OCR preview
-              </h2>
-              <ul className="mt-3 space-y-1 rounded-xl bg-mist-50 p-4 font-mono text-sm">
-                {ocrPreview.lines.map((line, i) => (
-                  <li
-                    key={i}
-                    className={`flex items-baseline justify-between gap-4 ${
-                      line.confidence < LOW_CONFIDENCE_THRESHOLD
-                        ? "opacity-40"
-                        : ""
-                    }`}
-                  >
-                    <span>{line.text}</span>
-                    <span className="shrink-0 text-xs tabular-nums text-ink-500">
-                      {(line.confidence * 100).toFixed(0)}%
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          {!mockShown && !inspection && !ocrPreview && (
-            <div className="card flex min-h-[320px] flex-col items-center justify-center p-10 text-center">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-12 w-12 text-mist-200" aria-hidden="true">
-                <circle cx="10.5" cy="10.5" r="6.5" />
-                <path strokeLinecap="round" d="M15.5 15.5 21 21" />
-              </svg>
-              <p className="mt-4 font-semibold text-navy-900">
-                Your verification results will appear here
-              </p>
-              <p className="mt-1 max-w-xs text-sm text-ink-500">
-                Pick a spec, upload a label photo, and press Verify Label — or
-                preview clearly-labeled sample results while the API is being
-                built.
-              </p>
-            </div>
-          )}
+      const prepared=await prepareImage(file);
+      if(prepared.compressed)setCompressNote(`Compressed ${formatBytes(prepared.originalBytes)} to ${formatBytes(prepared.finalBytes)} for upload.`);
+      const result=await api.createInspection(specId,prepared.file);setInspection(result);
+      if(!result.sample){const flagged=result.results.find(r=>r.status==="incorrect")??result.results.find(r=>r.status==="uncertain");const line=result.ocr.lines.find(l=>l.text===flagged?.found);if(line)setEvidence(await cropToBbox(prepared.file,line.bbox));}
+    } catch(e){setError(friendlyErrorMessage(e));} finally {setBusy(false);}
+  }
+  return <div className="inspect-page">
+    <div className="page-heading"><div><h1>New inspection</h1><p>Select a product specification, upload a label photo, and get verification results.</p></div></div>
+    <div className="inspection-workspace">
+      <section className="inspection-input-panel"><form onSubmit={submit}>
+        <h2>1. Select product spec</h2>
+        <details ref={pickerRef} className="spec-picker"><summary aria-label="Select product spec">{selected ? <><img src={specPresentation(selected).thumbnail} alt="" /><span><strong>{selected.name}</strong><small><span className={`approval-badge ${specPresentation(selected).status.toLowerCase()}`}>{specPresentation(selected).status==="Approved"?"◈ ":""}{specPresentation(selected).status}</span> • v{specPresentation(selected).version}</small></span></> : <span>Choose a specification</span>}<span className="picker-arrow" aria-hidden="true">⌄</span></summary>
+        <ul aria-label="Product specifications">{specs.map(s=>{const m=specPresentation(s);return <li key={s.id}><button type="button" aria-pressed={s.id===specId} onClick={()=>{setSpecId(s.id);setInspection(null);setEvidence(null);if(!file)setPreview(null);if(pickerRef.current)pickerRef.current.open=false;}}><img src={m.thumbnail} alt="" /><span><strong>{s.name}</strong><small><span className={`approval-badge ${m.status.toLowerCase()}`}>{m.status}</span> • v{m.version}</small></span></button></li>;})}</ul></details>
+        {!specs.length && <p className="form-hint">Create a specification on the <a href="/specs">Specs</a> page to begin.</p>}
+        <div className="upload-step"><h2>2. Upload label photo</h2>
+          <div className={`upload-dropzone ${dragging?"dragging":""}`} role="button" tabIndex={0} aria-label="Choose or drop a label photo" onClick={()=>inputRef.current?.click()} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();inputRef.current?.click();}}} onDragOver={e=>{e.preventDefault();setDragging(true);}} onDragLeave={()=>setDragging(false)} onDrop={e=>{e.preventDefault();setDragging(false);pickFile(e.dataTransfer.files[0]);}}>
+            <span className="upload-icon" aria-hidden="true">↥</span><strong>Drag &amp; drop a label photo here<br/>or click to choose</strong><p>PNG, JPEG, WEBP, BMP or TIFF<br/>(Max 4 MB, auto-resized to 1600px)</p>
+          </div>
+          <input ref={inputRef} type="file" accept="image/png,image/jpeg,image/webp,image/bmp,image/tiff" aria-label="Label photo file" className="sr-only" onChange={e=>pickFile(e.target.files?.[0])} />
+          {preview && <div className="photo-preview"><img src={preview} alt="Uploaded label preview" /><button type="button" aria-label="Remove photo" onClick={removeFile}>×</button></div>}
+          {preview && <p className="photo-filename">{file?.name ?? "granola_label.jpg"} <span>{file?formatBytes(file.size):"2.1 MB"}</span></p>}
         </div>
-      </div>
+        {error && <p className="error-message" role="alert">{error}</p>}
+        {compressNote && <p className="form-hint">{compressNote}</p>}
+        <button className="primary-button verify-button" disabled={busy || !specId}>{busy?"Verifying…":<>Verify Label <span aria-hidden="true">→</span></>}</button>
+        <p className="upload-note">Photos are automatically resized and compressed below 4.0 MB before upload.</p>
+      </form></section>
+      <div className="inspection-result-panel">{inspection ? <InspectionDetail inspection={inspection} evidenceUrl={evidence} /> : <section className="empty-results"><span aria-hidden="true">⌕</span><h2>{busy?"Verifying label…":"Your verification results will appear here"}</h2><p>Pick a specification, upload a label photo, and press Verify Label.</p><a href="/inspect?demo=1" className="outline-button">Try a sample inspection</a></section>}</div>
     </div>
-  );
+  </div>;
 }
-
-export default function InspectPage() {
-  return (
-    <Suspense
-      fallback={
-        <p className="text-sm text-ink-500">Loading inspection page…</p>
-      }
-    >
-      <InspectContent />
-    </Suspense>
-  );
-}
+export default function InspectPage(){return <Suspense fallback={<p>Loading inspection…</p>}><InspectContent /></Suspense>;}

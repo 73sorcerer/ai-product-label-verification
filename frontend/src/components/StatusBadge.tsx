@@ -18,12 +18,14 @@ function AlertIcon({ className = "h-4 w-4" }: { className?: string }) {
   );
 }
 
-const inspectionStyles: Record<InspectionStatus, string> = {
+const inspectionStyles: Record<InspectionStatus | "error", string> = {
+  error: "border-[#f3b8b8] bg-[#fdecec] text-[#c22727]",
   pass: "border-[#bbe5c9] bg-[#e7f6ec] text-[#15803d]",
   needs_review: "border-[#f5d9a8] bg-[#fdf0dc] text-[#b45309]",
 };
 
-const inspectionLabels: Record<InspectionStatus, string> = {
+const inspectionLabels: Record<InspectionStatus | "error", string> = {
+  error: "Error",
   pass: "Pass",
   needs_review: "Needs Review",
 };
@@ -32,16 +34,17 @@ export function InspectionBadge({
   status,
   big = false,
 }: {
-  status: InspectionStatus;
+  status: InspectionStatus | "error";
   big?: boolean;
 }) {
   return (
     <span
+      data-status={status}
       className={`inline-flex items-center gap-1.5 rounded-full border font-semibold ${inspectionStyles[status]} ${
         big ? "px-5 py-2 text-xl" : "px-3 py-1 text-sm"
       }`}
     >
-      {status === "pass" ? <CheckIcon /> : <AlertIcon />}
+      {status === "pass" ? <CheckIcon /> : status === "error" ? <XIcon /> : <AlertIcon />}
       {inspectionLabels[status]}
     </span>
   );
