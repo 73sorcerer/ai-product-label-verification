@@ -112,3 +112,29 @@ def test_specs_persist_across_app_restarts(client):
     spec = create(client)
     with TestClient(app) as restarted:  # init_db() runs again; existing rows must survive
         assert restarted.get(f"/specs/{spec['id']}").json() == spec
+
+
+# --- DELETE /specs/{id} -------------------------------------------------------
+
+
+def test_delete_unused_spec_returns_204_and_removes_it(client):
+    spec = create(client)
+    assert client.delete(f"/specs/{spec['id']}").status_code == 204
+    assert client.get(f"/specs/{spec['id']}").status_code == 404
+    assert client.get("/specs").json() == []
+
+
+def test_delete_unknown_spec_is_404(client):
+    assert client.delete("/specs/999999").status_code == 404
+
+
+def test_delete_spec_with_inspections_is_refused(client, fake_ocr):
+    """Inspections point at their spec; deleting it would orphan the history."""
+    spec = create(client)
+    fake_ocr([("Sunrise Farms", 0.99)])
+    files = {"image": ("label.png", b"fake", "image/png")}
+    assert client.post("/inspections", data={"spec_id": spec["id"]}, files=files).status_code == 201
+    r = client.delete(f"/specs/{spec['id']}")
+    assert r.status_code == 409
+    assert "inspection" in r.json()["detail"].lower()
+    assert client.get(f"/specs/{spec['id']}").status_code == 200

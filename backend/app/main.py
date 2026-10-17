@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import select, text
+from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 
 from app import ocr, verification
@@ -85,6 +85,17 @@ def list_specs(db: Session = Depends(get_db)):
 @app.get("/specs/{spec_id}", response_model=ProductSpecOut)
 def get_spec(spec_id: int, db: Session = Depends(get_db)):
     return _get_or_404(db, ProductSpec, spec_id)
+
+
+@app.delete("/specs/{spec_id}", status_code=204)
+def delete_spec(spec_id: int, db: Session = Depends(get_db)):
+    """Remove a spec nobody has inspected against. Refused (409) otherwise, so history keeps its spec."""
+    spec = _get_or_404(db, ProductSpec, spec_id)
+    used = db.scalar(select(func.count()).select_from(Inspection).where(Inspection.spec_id == spec.id))
+    if used:
+        raise HTTPException(409, f"Spec has {used} inspection(s) in history; it can't be deleted")
+    db.delete(spec)
+    db.commit()
 
 
 @app.post("/inspections", response_model=InspectionOut, status_code=201)

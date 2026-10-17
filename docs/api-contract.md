@@ -42,6 +42,11 @@ Create an approved product specification.
 ### `GET /specs` · `GET /specs/{id}`
 `200` → `ProductSpec[]` (oldest first) / `ProductSpec`; `404` if not found.
 
+### `DELETE /specs/{id}`
+Remove a spec that has never been inspected against (for example, a typo or test data).
+- `204` deleted · `404` unknown spec · `409` `{"detail": "Spec has N inspection(s) in history; it can't be deleted"}`
+- Specs can't be edited: each inspection keeps the expected values it was checked against. To change a spec, create a new one.
+
 ### `POST /inspections`
 Upload a label and check it against a spec.
 - Request: `multipart/form-data` with `spec_id` (int) and `image` (file)
@@ -101,5 +106,6 @@ verify_label(ocr: OcrResult, expected: dict[str, str]) -> VerificationResult
   | `VitaCore Health, Austin, TX` | `VitaCore Heath, Austin, TX` | 0.95 | `incorrect` is an acceptable false alarm |
 
   So: **check confidence before calling a mismatch `incorrect`**. Below **0.90** → `uncertain`. Otherwise a blurry photo of a good label reports a wrong expiry date.
+- **Oct 17, real product labels:** OCR now keeps color and upscales images to ≥ 2000 px on the long side. A grayscale pass erased red-on-yellow text (Kikkoman "15 FL OZ"), and small print was missed at native size. On an 8-case pack of real manufacturer label images it went from 6/8 to **8/8** correct verdicts; the synthetic samples stay 9/9. Cost: about +0.3 s per inspection.
 - **Normalize before comparing**: lowercase, strip whitespace and punctuation (OCR drops spaces such as `Contains:Soy`).
 - `data/sample_labels/manifest.json` is the answer key, and `tests/e2e/` checks every sample against it.
