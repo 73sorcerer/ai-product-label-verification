@@ -43,6 +43,7 @@ app.include_router(billing.router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=os.getenv("CORS_ORIGINS", "http://localhost:3000").split(","),
+    allow_credentials=True,  # the billing cookie (lg_workspace) must reach the API in local dev
     allow_methods=["*"],
     allow_headers=["*"],
 )

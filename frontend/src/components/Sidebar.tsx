@@ -4,13 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import Logo from "./Logo";
-import { House, ClipboardCheck, ScanText, History, Building2 } from "lucide-react";
+import { House, ClipboardCheck, ScanText, History, CreditCard, Building2 } from "lucide-react";
 
 export const NAV_ITEMS: { href: string; label: string; icon: ReactNode }[] = [
   { href: "/", label: "Home", icon: <House size={20} strokeWidth={1.75} aria-hidden="true" /> },
   { href: "/specs", label: "Specs", icon: <ClipboardCheck size={20} strokeWidth={1.75} aria-hidden="true" /> },
   { href: "/inspect", label: "Inspect", icon: <ScanText size={20} strokeWidth={1.75} aria-hidden="true" /> },
   { href: "/history", label: "History", icon: <History size={20} strokeWidth={1.75} aria-hidden="true" /> },
+  { href: "/pricing", label: "Pricing", icon: <CreditCard size={20} strokeWidth={1.75} aria-hidden="true" /> },
 ];
 
 export function isNavActive(pathname: string, href: string) {
