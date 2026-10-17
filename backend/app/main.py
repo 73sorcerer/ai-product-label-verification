@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 
-from app import ocr, verification
+from app import ocr, plans, verification
 from app.database import engine, get_db, init_db
 from app.models import (
     Inspection,
@@ -57,6 +57,12 @@ def health():
         raise HTTPException(503, "database unreachable")
     # commit lets deploy-check.yml wait until production is serving the commit it's testing.
     return {"status": "ok", "database": db, "commit": os.getenv("VERCEL_GIT_COMMIT_SHA", "local")}
+
+
+@app.get("/plans")
+def list_plans():
+    """Pricing tiers (ADR 0003). Static data; works without Stripe configured."""
+    return [p.to_dict() for p in plans.PLANS.values()]
 
 
 @app.post("/ocr", response_model=OcrOut)
