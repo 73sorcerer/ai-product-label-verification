@@ -22,7 +22,8 @@ export default function Home() {
         <p className="hero-eyebrow">AI PRODUCT LABEL VERIFICATION</p>
         <h1><span className="headline-lead">Catch label mistakes</span><span className="headline-followup">before your next production run.</span></h1>
         <p className="hero-description">One wrong label can mean wasted packaging, costly reprints, and delayed shipments. VeriLabel compares photographed product labels with your approved specifications, highlighting differences and unreadable fields so your team knows what needs attention.</p>
-        <div className="hero-actions"><Link href="/inspect?demo=1" className="primary-button">Try a sample inspection <span aria-hidden="true">→</span></Link><Link href="/specs?new=1" className="outline-button">Create a specification</Link></div>
+        <div className="hero-actions"><Link href="/inspect?demo=1" className="primary-button">Try a Sample Inspection <span aria-hidden="true">→</span></Link><Link href="/specs?new=1" className="outline-button">Create a Specification</Link></div>
+        <p className="hero-demo-note">Explore a demo with a sample label and illustrative results.</p>
         <ul className="hero-checks">{checks.map(c=><li key={c}><Check size={16} strokeWidth={2} aria-hidden="true" />{c}</li>)}</ul>
       </div>
       <div className="hero-visual">
@@ -32,7 +33,7 @@ export default function Home() {
     </section>
     <section id="solutions" className="landing-features">
       <h2>Built for the checks your team already makes</h2>
-      <div className="feature-grid">{features.map((f,i)=><article id={i===2 ? "resources" : i===3 ? "pricing" : undefined} key={f.title}><span className="feature-icon"><f.icon size={24} strokeWidth={1.75} aria-hidden="true" /></span><div><h3>{f.title}</h3><p>{f.text}</p></div></article>)}</div>
+      <div className="feature-grid">{features.map(f=><article key={f.title}><span className="feature-icon"><f.icon size={24} strokeWidth={1.75} aria-hidden="true" /></span><div><h3>{f.title}</h3><p>{f.text}</p></div></article>)}</div>
     </section>
   </div>;
 }

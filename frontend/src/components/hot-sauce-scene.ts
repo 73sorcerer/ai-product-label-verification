@@ -1,24 +1,18 @@
 import * as THREE from "three";
-import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { createHotSauceModel } from "./hot-sauce-model";
-export { loadBottleLabelFont } from "./hot-sauce-model";
+export { loadBottlePhoto } from "./hot-sauce-model";
 
-export function createBottleScene(host: HTMLElement, onFailure: () => void) {
+export function createBottleScene(host: HTMLElement, onFailure: () => void, photo: HTMLImageElement) {
   const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "low-power" });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1;
   renderer.domElement.setAttribute("aria-hidden", "true"); host.appendChild(renderer.domElement);
   const scene = new THREE.Scene();
-  const pmrem = new THREE.PMREMGenerator(renderer), room = new RoomEnvironment();
-  const environment = pmrem.fromScene(room, .04); scene.environment = environment.texture;
-  room.dispose(); pmrem.dispose();
-  const camera = new THREE.PerspectiveCamera(35, 1, .1, 30);
-  camera.position.set(0, .3, 6.1); camera.lookAt(0, .05, 0);
-  const key = new THREE.DirectionalLight(0xfff4df, 2); key.position.set(-3, 4, 5); scene.add(key);
-  const rim = new THREE.DirectionalLight(0xb9f2ff, 1.5); rim.position.set(3, 1, -2); scene.add(rim);
-  const pose = new THREE.Group(); pose.rotation.z = -.12;
-  const model = createHotSauceModel(); pose.add(model); scene.add(pose);
+  // Orthographic projection keeps the front view faithful to the supplied image.
+  const camera = new THREE.OrthographicCamera(-2, 2, 1.8, -1.8, .1, 30);
+  camera.position.set(0, 0, 8);
+  const model = createHotSauceModel(photo); scene.add(model);
   let frame = 0, angle = 0, target = 0, disposed = false, visible = true;
   const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
   function draw() {
@@ -33,7 +27,10 @@ export function createBottleScene(host: HTMLElement, onFailure: () => void) {
   function schedule() { if (!frame && !disposed) frame = requestAnimationFrame(draw); }
   function resize() {
     const { width, height } = host.getBoundingClientRect(); if (!width || !height) return;
-    renderer.setSize(width, height, false); camera.aspect = width / height; camera.updateProjectionMatrix(); schedule();
+    renderer.setSize(width, height, false);
+    const aspect = width / height, halfHeight = Math.max(1.8, 1.2 / aspect);
+    camera.left = -halfHeight * aspect; camera.right = halfHeight * aspect;
+    camera.top = halfHeight; camera.bottom = -halfHeight; camera.updateProjectionMatrix(); schedule();
   }
   function lost(event: Event) { event.preventDefault(); onFailure(); }
   renderer.domElement.addEventListener("webglcontextlost", lost);
@@ -59,7 +56,7 @@ export function createBottleScene(host: HTMLElement, onFailure: () => void) {
         }
       });
       geometries.forEach(item => item.dispose()); materials.forEach(item => item.dispose()); textures.forEach(item => item.dispose());
-      environment.dispose(); renderer.dispose(); renderer.domElement.remove();
+      renderer.dispose(); renderer.domElement.remove();
     },
   };
 }

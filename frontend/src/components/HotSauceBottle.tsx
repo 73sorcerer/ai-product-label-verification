@@ -18,11 +18,11 @@ export default function HotSauceBottle({ expanded, onActivate }: Props) {
   useEffect(() => {
     let cancelled = false;
     const element = host.current!;
-    import("./hot-sauce-scene").then(async ({ createBottleScene, loadBottleLabelFont }) => {
-      await loadBottleLabelFont();
+    import("./hot-sauce-scene").then(async ({ createBottleScene, loadBottlePhoto }) => {
+      const photo = await loadBottlePhoto();
       if (cancelled) return;
       try {
-        scene.current = createBottleScene(element, () => { scene.current?.dispose(); scene.current = null; setReady(false); });
+        scene.current = createBottleScene(element, () => { scene.current?.dispose(); scene.current = null; setReady(false); }, photo);
         scene.current.rotate(rotation.current); setReady(true);
       } catch { setReady(false); }
     }).catch(() => { if (!cancelled) setReady(false); });
