@@ -53,30 +53,62 @@ class _Recorder:
     def __init__(self, result):
         self.result, self.calls = result, []
 
-    def __call__(self, params=None, options=None):
+    def __call__(self, params=None, options=None, *rest):
+        if isinstance(params, str):  # positional id, e.g. sessions.expire("cs_1")
+            self.calls.append(params)
+            return self.result(params) if callable(self.result) else self.result
         self.calls.append(params or {})
         return self.result(params or {}) if callable(self.result) else self.result
 
 
-class FakeStripe:
-    """Stands in for StripeClient: only the v1 calls billing uses."""
+class _Obj(dict):
+    """Dict that also allows attribute access and to_dict(), like a StripeObject."""
 
-    def __init__(self, price_ids=None):
-        price_ids = price_ids if price_ids is not None else {"professional_monthly": "price_pro_m"}
+    __getattr__ = dict.get
+
+    def to_dict(self):
+        return dict(self)
+
+
+class FakeStripe:
+    """Stands in for StripeClient: only the v1 calls billing uses.
+
+    `subscriptions` holds Stripe's CURRENT state per subscription id (what retrieve() returns),
+    so tests can deliver stale webhook snapshots and check the code reconciles to the truth.
+    """
+
+    def __init__(self, price_ids=None, subscriptions=None):
+        price_ids = price_ids if price_ids is not None else {"professional_monthly": "price_pro_m", "starter_monthly": "price_start_m"}
+        self.subscriptions = subscriptions if subscriptions is not None else {}
+        self.sessions_created = 0
+        fake = self
 
         def prices(params):
             keys = params.get("lookup_keys", [])
-            return type("L", (), {"data": [type("P", (), {"id": price_ids[k]})() for k in keys if k in price_ids]})()
+            return _Obj(data=[_Obj(id=price_ids[k]) for k in keys if k in price_ids])
 
+        def create_session(params):
+            fake.sessions_created += 1
+            n = fake.sessions_created
+            return _Obj(id=f"cs_{n}", url=f"https://checkout.stripe.test/c/cs_{n}", expires_at=params.get("expires_at"))
+
+        def retrieve_subscription(sub_id, params=None, options=None):
+            fake.retrieve_calls.append(sub_id)
+            return _Obj(fake.subscriptions[sub_id])
+
+        self.retrieve_calls = []
         v1 = type("V1", (), {})()
         v1.prices = type("Prices", (), {})()
         v1.prices.list = _Recorder(prices)
         v1.checkout = type("Checkout", (), {})()
         v1.checkout.sessions = type("Sessions", (), {})()
-        v1.checkout.sessions.create = _Recorder(type("S", (), {"url": "https://checkout.stripe.test/c/s_123"})())
+        v1.checkout.sessions.create = _Recorder(create_session)
+        v1.checkout.sessions.expire = _Recorder(lambda params: _Obj(status="expired"))
         v1.billing_portal = type("Portal", (), {})()
         v1.billing_portal.sessions = type("Sessions", (), {})()
-        v1.billing_portal.sessions.create = _Recorder(type("S", (), {"url": "https://billing.stripe.test/p/s_456"})())
+        v1.billing_portal.sessions.create = _Recorder(_Obj(url="https://billing.stripe.test/p/s_456"))
+        v1.subscriptions = type("Subscriptions", (), {})()
+        v1.subscriptions.retrieve = retrieve_subscription
         self.v1 = v1
 
 
@@ -88,6 +120,7 @@ def fake_stripe():
     def install(**kwargs):
         stripe = FakeStripe(**kwargs)
         app.dependency_overrides[billing.get_stripe] = lambda: stripe
+        app.dependency_overrides[billing.get_stripe_optional] = lambda: stripe
         return stripe
 
     yield install

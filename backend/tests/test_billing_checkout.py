@@ -10,7 +10,7 @@ def test_checkout_returns_stripe_url(client, fake_stripe):
     fake_stripe()
     r = client.post("/billing/checkout", json=BODY)
     assert r.status_code == 200, r.text
-    assert r.json() == {"url": "https://checkout.stripe.test/c/s_123"}
+    assert r.json() == {"url": "https://checkout.stripe.test/c/cs_1"}
 
 
 def test_checkout_params(client, fake_stripe, monkeypatch):
@@ -109,3 +109,56 @@ def test_vercel_production_domain_is_trusted_without_public_url(client, fake_str
     stripe = fake_stripe()
     client.post("/billing/checkout", json=BODY, headers={"Origin": "https://ai-product-label-verification.vercel.app"})
     assert stripe.v1.checkout.sessions.create.calls[0]["cancel_url"] == "https://ai-product-label-verification.vercel.app/pricing"
+
+
+# --- review finding 1: one open checkout per workspace ---------------------------------
+
+
+def test_second_checkout_reuses_the_open_session(client, fake_stripe):
+    stripe = fake_stripe()
+    first = client.post("/billing/checkout", json=BODY).json()
+    second = client.post("/billing/checkout", json=BODY).json()
+    assert first == second
+    assert stripe.sessions_created == 1
+
+
+def test_changing_plan_expires_the_previous_session(client, fake_stripe):
+    stripe = fake_stripe()
+    client.post("/billing/checkout", json=BODY)
+    r = client.post("/billing/checkout", json={"plan": "starter", "interval": "monthly"})
+    assert r.json() == {"url": "https://checkout.stripe.test/c/cs_2"}
+    assert stripe.v1.checkout.sessions.expire.calls == ["cs_1"]
+
+
+def test_expired_pending_session_is_replaced(client, fake_stripe):
+    from datetime import datetime, timedelta, timezone
+    from app.database import SessionLocal
+    from app.models import PendingCheckout
+    stripe = fake_stripe()
+    client.post("/billing/checkout", json=BODY)
+    with SessionLocal() as db:
+        row = db.query(PendingCheckout).one()
+        row.expires_at = datetime.now(timezone.utc) - timedelta(minutes=1)
+        db.commit()
+    assert client.post("/billing/checkout", json=BODY).json() == {"url": "https://checkout.stripe.test/c/cs_2"}
+    assert stripe.sessions_created == 2
+
+
+def test_concurrent_checkout_returns_the_winner_and_expires_the_loser(client, fake_stripe, monkeypatch):
+    """Two requests race past the 'pending?' check; only one session may stay open."""
+    from datetime import datetime, timedelta, timezone
+    from app import billing
+    from app.database import SessionLocal
+    from app.models import PendingCheckout
+    stripe = fake_stripe()
+    client.get("/billing/status")
+    ws = workspace.verify(client.cookies.get(workspace.COOKIE), "dev-only-secret")
+    with SessionLocal() as db:  # the other request already won
+        db.add(PendingCheckout(workspace_id=ws, session_id="cs_winner", url="https://checkout.stripe.test/c/cs_winner",
+                               plan="professional", billing_interval="monthly",
+                               expires_at=datetime.now(timezone.utc) + timedelta(minutes=30)))
+        db.commit()
+    monkeypatch.setattr(billing, "_pending_for", lambda db, workspace_id: None)  # we lost the race
+    r = client.post("/billing/checkout", json=BODY)
+    assert r.json() == {"url": "https://checkout.stripe.test/c/cs_winner"}
+    assert stripe.v1.checkout.sessions.expire.calls == ["cs_1"]  # our own new session
