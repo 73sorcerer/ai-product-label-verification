@@ -39,13 +39,16 @@ npm ci && npm run lint && npm run build
 ```
 
 ## Git workflow
+- **Start every task from the latest `main`:** `git checkout main && git pull`, then create a new branch. Never keep committing to a branch whose PR already merged; start a fresh branch from `main` instead.
+- **Before every push**, sync and build: `git pull origin main` into your branch, then run the checks below (`npm run build` for frontend changes). If a file you depend on changed on `main`, update your code to match; don't revert theirs.
 - Never commit to `main`; it's protected. Branch per task: `feature/<area>-<short-name>`.
+- GitHub only merges PRs that are **up to date with `main`**. If your PR says "This branch is out-of-date", click **Update branch** (or `git pull origin main` and push) and let CI rerun.
 - Commits: small and focused, with a message saying what changed and why.
 - Open a PR that links its issue (`Refs #3`) and pastes test output. Three CI checks must pass: Backend unit tests, End-to-end (local server), Frontend lint + build.
 - *MVP completeness* is a non-required check that stays red until every route works. That's expected.
 
 ## Before you finish a task
-1. Run the backend unit tests, plus `npm run build` if you touched the frontend.
+1. Run the backend unit tests, plus `npm run lint && npm run build` if you touched the frontend. Pushing through the GitHub API or web editor skips these, so run them locally first.
 2. Append one line to `docs/ai-usage.md`: `date | who | tool | what was asked | what was kept/changed`. This is graded.
 3. Summarize what you changed and anything you couldn't verify.
 
