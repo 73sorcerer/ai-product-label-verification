@@ -83,3 +83,20 @@ def test_allowed_origin_is_used(client, fake_stripe, monkeypatch):
     stripe = fake_stripe()
     client.post("/billing/checkout", json=BODY, headers={"Origin": "http://localhost:3000"})
     assert stripe.v1.checkout.sessions.create.calls[0]["cancel_url"] == "http://localhost:3000/pricing"
+
+
+def test_checkout_blocked_when_already_subscribed(client, fake_stripe):
+    """A second live subscription would double-bill; send the customer to the portal instead."""
+    from app.database import SessionLocal
+    from app.models import Subscription
+    stripe = fake_stripe()
+    client.get("/billing/status")
+    ws = workspace.verify(client.cookies.get(workspace.COOKIE), "dev-only-secret")
+    with SessionLocal() as db:
+        db.add(Subscription(workspace_id=ws, stripe_customer_id="cus_1", stripe_subscription_id="sub_1",
+                            status="trialing", payment_failed=False, last_event_created=1))
+        db.commit()
+    r = client.post("/billing/checkout", json=BODY)
+    assert r.status_code == 409
+    assert "Manage billing" in r.json()["detail"]
+    assert stripe.v1.checkout.sessions.create.calls == []

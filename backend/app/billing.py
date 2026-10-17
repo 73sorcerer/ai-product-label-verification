@@ -16,7 +16,8 @@ import stripe as stripe_sdk
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from stripe import StripeClient
 
@@ -48,6 +49,10 @@ def _origin(request: Request) -> str:
     return origin if origin in allowed else public
 
 
+# A second checkout while one of these is live would double-bill.
+LIVE_STATUSES = {"trialing", "active", "past_due", "unpaid", "incomplete"}
+
+
 class CheckoutIn(BaseModel):
     plan: Literal["starter", "professional", "enterprise"]
     interval: Literal["monthly", "annual"]
@@ -59,7 +64,11 @@ def create_checkout(
     request: Request,
     workspace_id: str = Depends(get_workspace_id),
     stripe: StripeClient = Depends(get_stripe),
+    db: Session = Depends(get_db),
 ):
+    existing = db.scalar(select(Subscription).where(Subscription.workspace_id == workspace_id))
+    if existing is not None and existing.status in LIVE_STATUSES:
+        raise HTTPException(409, "This workspace already has a subscription. Use Manage billing to change plans.")
     key = plans.lookup_key(body.plan, body.interval)
     prices = stripe.v1.prices.list(params={"lookup_keys": [key], "active": True})
     if not prices.data:
@@ -149,6 +158,10 @@ def _row(db: Session, subscription_id: str) -> Subscription:
     return row
 
 
+def _already_processed(db: Session, event_id: str) -> bool:
+    return db.get(ProcessedEvent, event_id) is not None
+
+
 def _invoice_subscription(invoice: dict) -> str | None:
     # Older API versions: invoice.subscription; newer: invoice.parent.subscription_details.subscription
     return invoice.get("subscription") or ((invoice.get("parent") or {}).get("subscription_details") or {}).get("subscription")
@@ -167,7 +180,7 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
         raise HTTPException(400, "Invalid signature")
     event = json.loads(payload)  # verified; plain dicts are simpler than StripeObject here
 
-    if db.get(ProcessedEvent, event["id"]):
+    if _already_processed(db, event["id"]):
         return {"status": "duplicate"}
     if event["type"] not in HANDLED:
         return {"status": "ignored"}
@@ -176,7 +189,12 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
     if event["type"] == "checkout.session.completed":
         if obj.get("mode") == "subscription" and obj.get("subscription"):
             row = _row(db, obj["subscription"])
-            row.workspace_id = obj.get("client_reference_id")
+            workspace_id = obj.get("client_reference_id")
+            if workspace_id:  # newest subscription wins; unlink the old one (workspace_id is unique)
+                db.execute(update(Subscription).where(Subscription.workspace_id == workspace_id,
+                                                      Subscription.stripe_subscription_id != obj["subscription"])
+                           .values(workspace_id=None))
+            row.workspace_id = workspace_id
             row.stripe_customer_id = obj.get("customer")
     elif event["type"] in SUBSCRIPTION_EVENTS:
         row = _row(db, obj["id"])
@@ -197,5 +215,12 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
             _row(db, sub_id).payment_failed = event["type"] == "invoice.payment_failed"
 
     db.add(ProcessedEvent(event_id=event["id"]))
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        # A concurrent delivery of the same event won the race: that's a duplicate, not a failure.
+        db.rollback()
+        if db.get(ProcessedEvent, event["id"]) is not None:
+            return {"status": "duplicate"}
+        raise
     return {"status": "ok"}

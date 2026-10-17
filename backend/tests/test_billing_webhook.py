@@ -125,3 +125,25 @@ def test_webhook_works_without_api_key(client, monkeypatch):
 def test_unconfigured_webhook_secret_503(client, monkeypatch):
     monkeypatch.delenv("STRIPE_WEBHOOK_SECRET", raising=False)
     assert send(client, event("customer.subscription.created", subscription())).status_code == 503
+
+
+def test_second_checkout_relinks_workspace_to_new_subscription(client):
+    """Security review: workspace_id is unique; resubscribing must not 500 forever on retries."""
+    send(client, event("checkout.session.completed", checkout_completed(sub_id="sub_old"), id_="evt_1"))
+    r = send(client, event("checkout.session.completed", checkout_completed(sub_id="sub_new"), id_="evt_2"))
+    assert r.status_code == 200
+    linked = {row.stripe_subscription_id: row.workspace_id for row in rows()}
+    assert linked == {"sub_old": None, "sub_new": "ws_A"}
+
+
+def test_concurrent_duplicate_delivery_is_a_duplicate_not_500(client, monkeypatch):
+    """Two deliveries of one event race past the duplicate check; the loser must not 500."""
+    from app import billing
+    from app.models import ProcessedEvent
+    with SessionLocal() as db:
+        db.add(ProcessedEvent(event_id="evt_race"))
+        db.commit()
+    monkeypatch.setattr(billing, "_already_processed", lambda db, event_id: False)  # simulate losing the race
+    r = send(client, event("customer.subscription.created", subscription(), id_="evt_race"))
+    assert r.status_code == 200
+    assert r.json() == {"status": "duplicate"}
