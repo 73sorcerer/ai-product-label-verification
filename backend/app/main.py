@@ -55,7 +55,8 @@ def health():
         db = engine.dialect.name  # "sqlite" locally, "postgresql" when deployed
     except Exception:
         raise HTTPException(503, "database unreachable")
-    return {"status": "ok", "database": db}
+    # commit lets deploy-check.yml wait until production is serving the commit it's testing.
+    return {"status": "ok", "database": db, "commit": os.getenv("VERCEL_GIT_COMMIT_SHA", "local")}
 
 
 @app.post("/ocr", response_model=OcrOut)

@@ -9,7 +9,9 @@ SAMPLE = Path(__file__).resolve().parents[2] / "data" / "sample_labels" / "grano
 def test_health(client):
     from app.database import engine
 
-    assert client.get("/health").json() == {"status": "ok", "database": engine.dialect.name}
+    assert client.get("/health").json() == {
+        "status": "ok", "database": engine.dialect.name, "commit": "local"
+    }
 
 
 def test_ocr_endpoint_returns_text(client):

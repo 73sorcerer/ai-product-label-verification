@@ -1,6 +1,6 @@
 # Reusable AI Skills
 
-**Owner:** Vincent
+**Owner:** Vincent (QA) · Tray
 
 Agent skills packaged for the CSE 651 requirement. Each folder holds a `SKILL.md` (name and description in the frontmatter, instructions in the body) plus any helper scripts.
 
@@ -9,6 +9,9 @@ Agent skills packaged for the CSE 651 requirement. Each folder holds a `SKILL.md
 | [labelguard-testing](labelguard-testing/SKILL.md) | Running and debugging unit, OCR and E2E tests; telling OCR misreads from verification bugs; adding sample labels |
 
 ## Install
+
+**Muse Code:** nothing to do. The skill is already in `.agents/skills/labelguard-testing/`, which Muse loads once you trust the workspace (see [docs/muse-setup.md](../docs/muse-setup.md)). Edit `skills/labelguard-testing/SKILL.md` and copy it there; CI fails if the two differ.
+
 
 **Claude Code** (this project only, from the repo root):
 ```bash

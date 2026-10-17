@@ -1,10 +1,13 @@
-# OWNER: Vincent
-# After Vercel finishes a production deployment, run the E2E suite against the live URL.
-# Also runnable by hand: Actions -> "Deployment check" -> Run workflow (optionally with a URL).
+# OWNER: Tray (deployment) · results reviewed by Vincent (QA)
+# After a merge to main, wait until Vercel's production deployment is serving that commit
+# (via /api/health "commit"), then run the E2E suite against the live URL.
+# Vercel doesn't create GitHub "deployment" events for this project, so we poll instead.
+# Also runnable by hand: Actions -> "Deployment check" -> Run workflow.
 name: Deployment check
 
 on:
-  deployment_status:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       base_url:
@@ -14,21 +17,27 @@ on:
 jobs:
   e2e-deployed:
     name: End-to-end (deployed)
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.deployment_status.state == 'success' &&
-       github.event.deployment_status.environment == 'Production')
     runs-on: ubuntu-latest
+    env:
+      E2E_BASE_URL: ${{ inputs.base_url || 'https://ai-product-label-verification.vercel.app/api' }}
     steps:
       - uses: actions/checkout@v4
+      - name: Wait for production to serve this commit
+        if: github.event_name == 'push'
+        run: |
+          for i in $(seq 1 40); do
+            live=$(curl -sf "$E2E_BASE_URL/health" | python3 -c "import sys,json; print(json.load(sys.stdin).get('commit',''))" || true)
+            [ "$live" = "$GITHUB_SHA" ] && echo "Production is on $GITHUB_SHA" && exit 0
+            echo "waiting ($i/40): production on '${live:-unreachable}'"; sleep 15
+          done
+          echo "::error::Production never served $GITHUB_SHA within 10 minutes. Check the Vercel dashboard."
+          exit 1
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - run: pip install -r tests/requirements.txt
-      - name: Run E2E against deployment
+      - name: Run E2E against production
         working-directory: tests/e2e
-        env:
-          E2E_BASE_URL: ${{ inputs.base_url || format('{0}/api', github.event.deployment_status.environment_url) }}
         run: |
           echo "Testing $E2E_BASE_URL"
           pytest -q -rx
