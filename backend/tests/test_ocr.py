@@ -144,3 +144,27 @@ def test_degraded_label_flags_its_garbled_lines_as_low_confidence():
     assert "vitacore" in norm(noisy.text)
     assert noisy.mean_confidence < clean.mean_confidence
     assert min(l.confidence for l in noisy.lines) < 0.9
+
+
+# --- bounding boxes are in original-image coordinates ----------------------------
+
+
+def test_scale_lines_maps_boxes_back_to_original_size():
+    lines = [ocr.OcrLine("x", 0.9, (250, 100, 500, 50))]
+    [line] = ocr.scale_lines(lines, 0.4)
+    assert line.bbox == (100, 40, 200, 20)
+
+
+@needs_samples
+def test_boxes_fit_inside_the_uploaded_image_even_when_upscaled():
+    """vitamin_low_quality.jpg is 400 px wide, so OCR enlarges it 2.5x before reading.
+    The frontend crops the *uploaded* image with these boxes, so they must be in its coordinates."""
+    data = (SAMPLES / "vitamin_low_quality.jpg").read_bytes()
+    width, height = Image.open(io.BytesIO(data)).size
+    assert width < ocr.MIN_WIDTH  # precondition: this image does get upscaled
+    result = ocr.extract_text(data)
+    assert result.lines
+    for line in result.lines:
+        left, top, w, h = line.bbox
+        assert 0 <= left and 0 <= top, line
+        assert left + w <= width + 2 and top + h <= height + 2, (line, width, height)

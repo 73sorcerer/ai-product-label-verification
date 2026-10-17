@@ -57,7 +57,7 @@ type ProductSpec = { id: number; name: string; fields: Record<string, string>; c
 
 type OcrResult = {
   text: string;               // all lines joined with "\n", top to bottom
-  lines: { text: string; confidence: number /* 0-1 */; bbox: [left, top, width, height] }[];
+  lines: { text: string; confidence: number /* 0-1 */; bbox: [left, top, width, height] /* pixels of the uploaded image, EXIF-rotated as browsers display it */ }[];
   mean_confidence: number;    // 0-1
   engine: "rapidocr" | "tesseract";
 };

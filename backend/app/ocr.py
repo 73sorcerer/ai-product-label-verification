@@ -33,7 +33,7 @@ class OcrError(Exception):
 class OcrLine:
     text: str
     confidence: float  # 0.0 to 1.0
-    bbox: tuple[int, int, int, int]  # left, top, width, height in preprocessed-image pixels
+    bbox: tuple[int, int, int, int]  # left, top, width, height in original-image pixels (EXIF-rotated)
 
 
 @dataclass
@@ -56,8 +56,8 @@ class OcrResult:
 
 
 def extract_text(image_bytes: bytes) -> OcrResult:
-    image = load_image(image_bytes)
-    image = preprocess(image)
+    original = load_image(image_bytes)
+    image = preprocess(original)
     engine = os.getenv("OCR_ENGINE", "rapidocr").lower()
     if engine == "rapidocr":
         lines = _run_rapidocr(image)
@@ -65,7 +65,10 @@ def extract_text(image_bytes: bytes) -> OcrResult:
         lines = _run_tesseract(image)
     else:
         raise OcrError(f"Unknown OCR_ENGINE: {engine}")
-    return build_result(lines, engine)
+    # preprocess() may upscale; report boxes in the uploaded image's own pixels (after EXIF
+    # rotation, which is how browsers display it) so clients can crop or overlay directly.
+    oriented_width = ImageOps.exif_transpose(original).width
+    return build_result(scale_lines(lines, oriented_width / image.width), engine)
 
 
 def load_image(image_bytes: bytes) -> Image.Image:
@@ -91,6 +94,15 @@ def preprocess(image: Image.Image) -> Image.Image:
         scale = MIN_WIDTH / image.width
         image = image.resize((MIN_WIDTH, round(image.height * scale)), Image.LANCZOS)
     return ImageOps.autocontrast(image, cutoff=1)
+
+
+def scale_lines(lines: list[OcrLine], factor: float) -> list[OcrLine]:
+    if factor == 1:
+        return lines
+    return [
+        OcrLine(l.text, l.confidence, tuple(round(v * factor) for v in l.bbox))
+        for l in lines
+    ]
 
 
 def build_result(lines: list[OcrLine], engine: str) -> OcrResult:
