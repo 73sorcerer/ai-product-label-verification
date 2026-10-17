@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_serializer
-from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -38,6 +38,35 @@ class Inspection(Base):
     ocr: Mapped[dict] = mapped_column(JSON)  # OcrResult.to_dict()
     results: Mapped[list] = mapped_column(JSON)  # list of FieldResult dicts
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now, index=True)
+
+
+class Subscription(Base):
+    """Stripe subscription state, written ONLY by the webhook (ADR 0003). Keyed by Stripe's ID so
+    events can arrive before checkout.session.completed links the workspace."""
+
+    __tablename__ = "subscriptions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    workspace_id: Mapped[str | None] = mapped_column(String(64), unique=True, nullable=True)
+    stripe_customer_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    stripe_subscription_id: Mapped[str] = mapped_column(String(255), unique=True)
+    plan: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    billing_interval: Mapped[str | None] = mapped_column(String(10), nullable=True)  # not "interval": reserved in Postgres
+    status: Mapped[str | None] = mapped_column(String(20), nullable=True)  # Stripe status verbatim
+    trial_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    current_period_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    payment_failed: Mapped[bool] = mapped_column(Boolean, default=False)
+    last_event_created: Mapped[int] = mapped_column(Integer, default=0)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now, onupdate=_now)
+
+
+class ProcessedEvent(Base):
+    """Stripe event IDs already handled; makes webhook retries no-ops."""
+
+    __tablename__ = "processed_events"
+
+    event_id: Mapped[str] = mapped_column(String(255), primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
 
 # --- API schemas ----------------------------------------------------------
