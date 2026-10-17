@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="510" viewBox="0 0 1200 510" role="img" aria-labelledby="title desc">
+  <title id="title">VeriLabel — catch label mistakes before your next production run</title>
+  <desc id="desc">A navy and teal illustration of an approved product label being scanned and compared field by field. A review card flags a net weight mismatch.</desc>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#0b172b"/><stop offset="1" stop-color="#103d4c"/></linearGradient>
+    <linearGradient id="teal" x2="1" y2="1"><stop stop-color="#67e8f9"/><stop offset="1" stop-color="#0891b2"/></linearGradient>
+    <linearGradient id="paper" x2="1" y2="1"><stop stop-color="#fffdf5"/><stop offset="1" stop-color="#e9e4d7"/></linearGradient>
+    <radialGradient id="glow"><stop stop-color="#22d3ee" stop-opacity=".17"/><stop offset="1" stop-color="#22d3ee" stop-opacity="0"/></radialGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#a5f3fc" stroke-opacity=".045"/></pattern>
+  </defs>
+  <rect width="1200" height="510" rx="24" fill="url(#bg)"/>
+  <rect width="1200" height="510" rx="24" fill="url(#grid)"/>
+  <ellipse cx="850" cy="260" rx="370" ry="310" fill="url(#glow)"/>
+  <g font-family="Arial, Helvetica, sans-serif">
+    <path d="M58 49l17-7 17 7v15c0 14-17 24-17 24S58 78 58 64z" fill="url(#teal)"/>
+    <path d="m67 63 6 6 11-13" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="105" y="74" fill="#fff" font-size="28" font-weight="700">VeriLabel</text>
+    <rect x="56" y="123" width="250" height="28" rx="14" fill="#164654" stroke="#2c6470"/>
+    <text x="72" y="142" fill="#a5f3fc" font-size="11" letter-spacing="1.3">AI PRODUCT LABEL VERIFICATION</text>
+    <text x="56" y="212" fill="#fff" font-size="47" font-weight="700" letter-spacing="-1.8">Catch label mistakes</text>
+    <text x="56" y="269" fill="#67e8f9" font-size="47" font-weight="700" letter-spacing="-1.8">before your next</text>
+    <text x="56" y="326" fill="#67e8f9" font-size="47" font-weight="700" letter-spacing="-1.8">production run.</text>
+    <text x="58" y="371" fill="#bdcddd" font-size="17">Compare printed labels with approved specs.</text>
+    <text x="58" y="399" fill="#bdcddd" font-size="17">Find differences. Review uncertainty. Keep a record.</text>
+    <path d="M58 445h466" stroke="#325362"/>
+    <text x="58" y="472" fill="#91b4c4" font-size="11" letter-spacing="2">REFERENCE  /  DETECTION  /  REVIEW  /  TRACEABILITY</text>
+    <g transform="translate(654 88) rotate(-8 125 170)">
+      <rect x="8" y="12" width="246" height="329" rx="17" fill="#000" opacity=".2"/>
+      <rect width="246" height="329" rx="17" fill="url(#paper)"/>
+      <rect x="21" y="22" width="204" height="285" rx="4" fill="none" stroke="#b6b0a0"/>
+      <text x="123" y="62" text-anchor="middle" fill="#695f4b" font-size="10" letter-spacing="3">SMALL BATCH</text>
+      <path d="M65 78h116" stroke="#a19a88"/>
+      <text x="123" y="123" text-anchor="middle" fill="#182c34" font-size="30" font-weight="800">ORIGINAL</text>
+      <text x="123" y="159" text-anchor="middle" fill="#182c34" font-size="30" font-weight="800">HOT SAUCE</text>
+      <text x="123" y="190" text-anchor="middle" fill="#695f4b" font-size="11">All Natural Ingredients</text>
+      <path d="M49 211h148" stroke="#c7c0ae"/>
+      <rect x="37" y="225" width="173" height="32" rx="5" fill="#fef3c7" stroke="#d97706"/>
+      <text x="123" y="246" text-anchor="middle" fill="#92400e" font-size="13" font-weight="700">NET WT. 10 OZ (283 g)</text>
+      <g stroke="#263c43" stroke-width="2"><path d="M70 276v15m5-15v15m7-15v15m4-15v15m9-15v15m6-15v15m4-15v15m7-15v15m6-15v15m9-15v15m5-15v15m6-15v15m8-15v15m4-15v15m9-15v15m4-15v15"/></g>
+    </g>
+    <path d="M636 155v-28h28m-28 229v28h28m222-257h28v28m0 201v28h-28" fill="none" stroke="#67e8f9" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M624 259h300" stroke="#22d3ee" stroke-width="18" opacity=".08"/>
+    <path d="M624 259h300" stroke="#67e8f9" stroke-width="2" opacity=".8"/>
+    <g transform="translate(892 201)">
+      <rect x="4" y="9" width="258" height="224" rx="16" fill="#000" opacity=".18"/>
+      <rect width="258" height="224" rx="16" fill="#f8fafc" stroke="#d3e5eb"/>
+      <rect x="16" y="16" width="139" height="29" rx="14" fill="#fef3c7"/>
+      <path d="m30 24 7 12H23z" fill="#d97706"/>
+      <text x="45" y="36" fill="#92400e" font-size="12" font-weight="700">Needs Review</text>
+      <text x="18" y="75" fill="#0f172a" font-size="17" font-weight="700">One detail. Big difference.</text>
+      <text x="18" y="101" fill="#64748b" font-size="12">Net weight</text>
+      <text x="18" y="126" fill="#64748b" font-size="11">EXPECTED</text>
+      <text x="141" y="126" fill="#64748b" font-size="11">DETECTED</text>
+      <text x="18" y="149" fill="#0f172a" font-size="15" font-weight="700">12 oz (340 g)</text>
+      <text x="141" y="149" fill="#b45309" font-size="15" font-weight="700">10 oz (283 g)</text>
+      <path d="M18 167h222" stroke="#e2e8f0"/>
+      <circle cx="26" cy="193" r="8" fill="#ccfbf1"/>
+      <path d="m22 193 3 3 5-6" fill="none" stroke="#0f766e" stroke-width="1.7"/>
+      <text x="42" y="197" fill="#475569" font-size="11">Field-level evidence, ready to review</text>
+    </g>
+    <text x="912" y="463" fill="#91b4c4" font-size="10" letter-spacing="1">ILLUSTRATIVE WORKFLOW</text>
+  </g>
+</svg>

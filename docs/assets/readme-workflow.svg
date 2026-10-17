@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="238" viewBox="0 0 1200 238" role="img" aria-labelledby="title desc">
+  <title id="title">Four steps from a specification to an inspection record</title>
+  <desc id="desc">Save expected fields, upload a printed label, compare OCR text with the specification, and review the saved verdict.</desc>
+  <defs><linearGradient id="tile" x2="1" y2="1"><stop stop-color="#e0f2fe"/><stop offset="1" stop-color="#cce7f5"/></linearGradient></defs>
+  <rect x="1" y="1" width="1198" height="236" rx="20" fill="#f8fafc" stroke="#dbe7ed"/>
+  <g font-family="Arial, Helvetica, sans-serif">
+    <g fill="url(#tile)" stroke="#c8e0e9"><rect x="28" y="30" width="48" height="48" rx="12"/><rect x="328" y="30" width="48" height="48" rx="12"/><rect x="628" y="30" width="48" height="48" rx="12"/><rect x="928" y="30" width="48" height="48" rx="12"/></g>
+    <g fill="none" stroke="#0e7490" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="42" y="44" width="20" height="24" rx="3"/><rect x="47" y="41" width="10" height="6" rx="2" fill="#d6edf9"/><path d="m47 58 4 4 7-8"/>
+      <path d="M342 50v-7h7m13 0h7v7m0 12v7h-7m-13 0h-7v-7m7-10h13m-13 5h13m-13 5h8"/>
+      <path d="m652 42 14 25h-28zM652 51v7m0 5h.01"/>
+      <path d="M944 49a12 12 0 1 1-1 13m0-20v8h8m5-2v9l6 3"/>
+    </g>
+    <g fill="#0891b2" font-size="11" font-weight="700" letter-spacing="1.5"><text x="28" y="106">01 / SPECIFY</text><text x="328" y="106">02 / UPLOAD</text><text x="628" y="106">03 / COMPARE</text><text x="928" y="106">04 / REVIEW</text></g>
+    <g fill="#0f172a" font-size="21" font-weight="700"><text x="28" y="137">Define the reference</text><text x="328" y="137">Bring the real label</text><text x="628" y="137">Find the differences</text><text x="928" y="137">Keep the evidence</text></g>
+    <g fill="#526579" font-size="14"><text x="28" y="167">Save the approved text for</text><text x="28" y="190">every field you want to check.</text><text x="328" y="167">Choose a spec and upload</text><text x="328" y="190">a photo of the printed label.</text><text x="628" y="167">OCR reads the text; verification</text><text x="628" y="190">checks it against your spec.</text><text x="928" y="167">Inspect each field and revisit</text><text x="928" y="190">saved results in History.</text></g>
+    <g stroke="#cbdde6"><path d="M300 30v178m300-178v178m300-178v178"/></g>
+  </g>
+</svg>
