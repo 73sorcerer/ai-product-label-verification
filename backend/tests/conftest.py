@@ -45,3 +45,50 @@ def fake_ocr(monkeypatch):
         return calls
 
     return install
+
+
+class _Recorder:
+    """Records the params of each call and returns a canned object."""
+
+    def __init__(self, result):
+        self.result, self.calls = result, []
+
+    def __call__(self, params=None, options=None):
+        self.calls.append(params or {})
+        return self.result(params or {}) if callable(self.result) else self.result
+
+
+class FakeStripe:
+    """Stands in for StripeClient: only the v1 calls billing uses."""
+
+    def __init__(self, price_ids=None):
+        price_ids = price_ids if price_ids is not None else {"professional_monthly": "price_pro_m"}
+
+        def prices(params):
+            keys = params.get("lookup_keys", [])
+            return type("L", (), {"data": [type("P", (), {"id": price_ids[k]})() for k in keys if k in price_ids]})()
+
+        v1 = type("V1", (), {})()
+        v1.prices = type("Prices", (), {})()
+        v1.prices.list = _Recorder(prices)
+        v1.checkout = type("Checkout", (), {})()
+        v1.checkout.sessions = type("Sessions", (), {})()
+        v1.checkout.sessions.create = _Recorder(type("S", (), {"url": "https://checkout.stripe.test/c/s_123"})())
+        v1.billing_portal = type("Portal", (), {})()
+        v1.billing_portal.sessions = type("Sessions", (), {})()
+        v1.billing_portal.sessions.create = _Recorder(type("S", (), {"url": "https://billing.stripe.test/p/s_456"})())
+        self.v1 = v1
+
+
+@pytest.fixture
+def fake_stripe():
+    """Inject a FakeStripe into the billing routes: `stripe = fake_stripe()`."""
+    from app import billing
+
+    def install(**kwargs):
+        stripe = FakeStripe(**kwargs)
+        app.dependency_overrides[billing.get_stripe] = lambda: stripe
+        return stripe
+
+    yield install
+    app.dependency_overrides.clear()

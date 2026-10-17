@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 
-from app import ocr, plans, verification
+from app import billing, ocr, plans, verification
 from app.database import engine, get_db, init_db
 from app.models import (
     Inspection,
@@ -36,6 +36,8 @@ app = FastAPI(
     lifespan=lifespan,
     root_path="/api" if os.getenv("VERCEL") else "",
 )
+
+app.include_router(billing.router)
 
 # TODO(Vincent): set CORS_ORIGINS to the deployed frontend URL.
 app.add_middleware(
