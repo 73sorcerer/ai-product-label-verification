@@ -2,10 +2,14 @@
 // (Vercel request limit). Files already under the limit pass through untouched.
 
 export const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
+export const MAX_LONGEST_SIDE_PX = 1600;
 
 export interface PreparedImage {
   file: File;
+  /** true when the image was re-encoded (resized or re-compressed) */
   compressed: boolean;
+  /** true when the longest side was shrunk to MAX_LONGEST_SIDE_PX */
+  resized: boolean;
   originalBytes: number;
   finalBytes: number;
 }
@@ -34,19 +38,25 @@ function canvasToBlob(
 
 export async function prepareImage(file: File): Promise<PreparedImage> {
   const originalBytes = file.size;
-  if (originalBytes <= MAX_UPLOAD_BYTES) {
-    return {
-      file,
-      compressed: false,
-      originalBytes,
-      finalBytes: originalBytes,
-    };
-  }
   const url = URL.createObjectURL(file);
   try {
     const img = await loadImage(url);
-    let width = img.width;
-    let height = img.height;
+    // Cap the longest side at 1600 px first, then compress until under 4 MB.
+    const longest = Math.max(img.width, img.height);
+    const downscale =
+      longest > MAX_LONGEST_SIDE_PX ? MAX_LONGEST_SIDE_PX / longest : 1;
+    const resized = downscale < 1;
+    if (originalBytes <= MAX_UPLOAD_BYTES && !resized) {
+      return {
+        file,
+        compressed: false,
+        resized: false,
+        originalBytes,
+        finalBytes: originalBytes,
+      };
+    }
+    let width = img.width * downscale;
+    let height = img.height * downscale;
     let quality = 0.85;
     let blob: Blob | null = null;
     for (let i = 0; i < 6; i++) {
@@ -71,6 +81,7 @@ export async function prepareImage(file: File): Promise<PreparedImage> {
     return {
       file: out,
       compressed: true,
+      resized,
       originalBytes,
       finalBytes: out.size,
     };

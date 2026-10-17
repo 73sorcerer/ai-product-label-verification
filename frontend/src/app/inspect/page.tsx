@@ -10,8 +10,11 @@ import {
 } from "@/lib/api";
 import {
   formatBytes,
+  MAX_LONGEST_SIDE_PX,
+  MAX_UPLOAD_BYTES,
   prepareImage,
 } from "@/lib/image";
+import { MOCK_INSPECTION } from "@/lib/mock";
 import InspectionDetail, {
   LOW_CONFIDENCE_THRESHOLD,
 } from "@/components/InspectionDetail";
@@ -31,6 +34,9 @@ export default function InspectPage() {
   // OCR-only preview (POST /ocr works now; /inspections may still be a stub)
   const [ocrPreview, setOcrPreview] = useState<OcrResult | null>(null);
   const [ocrLoading, setOcrLoading] = useState(false);
+
+  // Demo-only mock results, shown while POST /inspections is still a stub.
+  const [mockShown, setMockShown] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -57,6 +63,7 @@ export default function InspectPage() {
     setInspection(null);
     setOcrPreview(null);
     setCompressNote(null);
+    setMockShown(false);
     setError(null);
   };
 
@@ -66,6 +73,7 @@ export default function InspectPage() {
     setInspection(null);
     setOcrPreview(null);
     setCompressNote(null);
+    setMockShown(false);
     if (!specId) {
       setError("Pick a spec first.");
       return;
@@ -205,7 +213,9 @@ export default function InspectPage() {
             </p>
           )}
           <p className="mt-1 text-xs text-zinc-500">
-            Photos are automatically compressed below 4 MB before upload.
+            Photos are automatically resized (max {MAX_LONGEST_SIDE_PX}px on the
+            longest side) and compressed below{" "}
+            {formatBytes(MAX_UPLOAD_BYTES)} before upload.
           </p>
         </div>
 
@@ -213,7 +223,7 @@ export default function InspectPage() {
           <div className="rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
             {error}
             {error.includes("not implemented") && file && (
-              <div className="mt-2">
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
                 <button
                   type="button"
                   onClick={() => void previewOcr()}
@@ -224,6 +234,13 @@ export default function InspectPage() {
                     ? "Reading text…"
                     : "Preview OCR text only (works now)"}
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setMockShown(true)}
+                  className="underline"
+                >
+                  View sample results (demo)
+                </button>
               </div>
             )}
           </div>
@@ -233,7 +250,7 @@ export default function InspectPage() {
           disabled={submitting}
           className="rounded-md bg-zinc-950 px-5 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200"
         >
-          {submitting ? "Verifying…" : "Run inspection"}
+          {submitting ? "Verifying…" : "Verify Label"}
         </button>
       </form>
 
@@ -255,6 +272,18 @@ export default function InspectPage() {
               </li>
             ))}
           </ul>
+        </section>
+      )}
+
+      {mockShown && (
+        <section>
+          <div className="mb-4 rounded-md border border-dashed border-zinc-400 bg-zinc-100 px-4 py-3 text-sm text-zinc-700 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-300">
+            <span className="font-semibold">Sample results — demo only.</span>{" "}
+            The inspection API isn&apos;t ready yet, so this is placeholder data
+            to show the layout.
+          </div>
+          <h2 className="mb-4 text-lg font-semibold">Result</h2>
+          <InspectionDetail inspection={MOCK_INSPECTION} />
         </section>
       )}
 
