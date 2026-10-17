@@ -15,3 +15,4 @@
 | 2026-10-16 | Tray | Codex | Match deployed VeriLabel to mockup, step 1: sample data | Added frontend-only fixtures, 501/explicit mock fallback, sample banner, and generated product assets; browser screenshots checked |
 | 2026-10-16 | Tray | Codex | Mockup step 2: full-width shell | Removed app max-width and footer, added navy sidebar user block; compared all page screenshots |
 | 2026-10-16 | Tray | Codex | Mockup step 3: landing page | Added full nav, wide hero, generated angled bottle, soft hexagon background, separate Pass card, compact feature row; browser comparison complete |
+| 2026-10-16 | Tray | Codex | Mockup step 4: specifications | Built searchable two-pane spec workspace, product thumbnails, selection, status/version metadata, tabs, notes table, menus, and add-field/new-spec form; lint and TypeScript pass, screenshot compared |
