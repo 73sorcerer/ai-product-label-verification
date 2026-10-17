@@ -67,6 +67,6 @@ The frontend picks its API address automatically: `/api` in production builds, `
 
 ## Billing (Stripe, test mode)
 
-- Stripe sandbox via the Vercel Marketplace; Products/Prices/Portal/webhook created by `python backend/scripts/stripe_setup.py --env-file .env.stripe` (idempotent; never prints secrets).
+- Stripe sandbox via the Vercel Marketplace (`stripe-erin-kite`); Products/Prices/Portal/webhook created by `python backend/scripts/stripe_setup.py --env-file .env.stripe` (idempotent; never prints secrets; only reports OK after verifying every required Vercel variable). If the webhook secret is ever lost, rerun with `--rotate-webhook`.
 - Webhook: `https://ai-product-label-verification.vercel.app/api/billing/webhook` (production only; previews are behind Vercel login). Local: `stripe listen --forward-to localhost:8000/billing/webhook`.
 - Test card: 4242 4242 4242 4242, any future date, any CVC. Stripe Tax is off (no registration).
