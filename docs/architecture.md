@@ -49,6 +49,8 @@ sequenceDiagram
 ## Decisions
 - [0001: OCR engine](adr/0001-ocr-engine.md)
 - [0002: Hosting on Vercel + Neon Postgres](adr/0002-hosting-vercel-neon.md): SQLite locally, Neon Postgres in production, picked by `DATABASE_URL`.
+- [0003: Three-tier pricing with Stripe Billing](adr/0003-pricing-and-stripe-billing.md): planned, see `superpowers/plans/2026-10-17-pricing-stripe.md`.
+- [0004: Workspace cookie now, Clerk Organizations later](adr/0004-workspace-identity-now-clerk-later.md)
 
 ## Deployment
 One Vercel project: `/api/*` → FastAPI service, `/*` → Next.js service, same origin. Details: [deployment.md](deployment.md).
