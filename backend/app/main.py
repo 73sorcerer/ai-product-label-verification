@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 
-from app import ocr, verification
+from app import billing, ocr, plans, verification
 from app.database import engine, get_db, init_db
 from app.models import (
     Inspection,
@@ -37,10 +37,13 @@ app = FastAPI(
     root_path="/api" if os.getenv("VERCEL") else "",
 )
 
+app.include_router(billing.router)
+
 # TODO(Vincent): set CORS_ORIGINS to the deployed frontend URL.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=os.getenv("CORS_ORIGINS", "http://localhost:3000").split(","),
+    allow_credentials=True,  # the billing cookie (lg_workspace) must reach the API in local dev
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -57,6 +60,12 @@ def health():
         raise HTTPException(503, "database unreachable")
     # commit lets deploy-check.yml wait until production is serving the commit it's testing.
     return {"status": "ok", "database": db, "commit": os.getenv("VERCEL_GIT_COMMIT_SHA", "local")}
+
+
+@app.get("/plans")
+def list_plans():
+    """Pricing tiers (ADR 0003). Static data; works without Stripe configured."""
+    return [p.to_dict() for p in plans.PLANS.values()]
 
 
 @app.post("/ocr", response_model=OcrOut)

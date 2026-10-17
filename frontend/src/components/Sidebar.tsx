@@ -4,13 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import Logo from "./Logo";
-import { House, ClipboardCheck, ScanText, History, Building2 } from "lucide-react";
+import PlanBadge from "./PlanBadge";
+import { House, ClipboardCheck, ScanText, History, CreditCard, Building2 } from "lucide-react";
 
 export const NAV_ITEMS: { href: string; label: string; icon: ReactNode }[] = [
   { href: "/", label: "Home", icon: <House size={20} strokeWidth={1.75} aria-hidden="true" /> },
   { href: "/specs", label: "Specs", icon: <ClipboardCheck size={20} strokeWidth={1.75} aria-hidden="true" /> },
   { href: "/inspect", label: "Inspect", icon: <ScanText size={20} strokeWidth={1.75} aria-hidden="true" /> },
   { href: "/history", label: "History", icon: <History size={20} strokeWidth={1.75} aria-hidden="true" /> },
+  { href: "/pricing", label: "Pricing", icon: <CreditCard size={20} strokeWidth={1.75} aria-hidden="true" /> },
 ];
 
 export function isNavActive(pathname: string, href: string) {
@@ -45,8 +47,9 @@ export default function Sidebar() {
           );
         })}
       </nav>
+      <div className="mt-auto"><PlanBadge /></div>
       {/* No accounts yet (ADR 0004), so don't show a signed-in user. */}
-      <div className="mt-auto flex items-center gap-3 px-2 text-sm text-white" title="Everyone using this site shares one workspace. Sign-in comes later.">
+      <div className="flex items-center gap-3 px-2 text-sm text-white" title="Everyone using this site shares one workspace. Sign-in comes later.">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-navy-800 text-navy-200"><Building2 size={18} strokeWidth={1.75} aria-hidden="true" /></span>
         <div><p>Demo workspace</p><p className="text-xs text-navy-200">No sign-in yet</p></div>
       </div>

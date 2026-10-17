@@ -43,6 +43,19 @@ export type Inspection = {
   created_at: string;
 };
 
+// Billing (ADR 0003). null limits mean unlimited.
+export type PlanId = "starter" | "professional" | "enterprise";
+export type BillingInterval = "monthly" | "annual";
+export type Plan = {
+  id: PlanId; name: string; monthly_cents: number; annual_cents: number;
+  inspections_per_month: number | null; saved_specs: number | null; history_days: number | null;
+  highlight: boolean; trial_days: number;
+};
+export type BillingStatus = {
+  plan: PlanId | null; interval: BillingInterval | null; status: string | null;
+  trial_end: string | null; current_period_end: string | null; payment_failed: boolean;
+};
+
 // Deployed: frontend and API share one origin, with the API under /api (vercel.json).
 // Local dev: the API runs on :8000. NEXT_PUBLIC_API_URL overrides either.
 const API_BASE =
@@ -74,7 +87,8 @@ export function friendlyErrorMessage(err: unknown): string {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, init);
+  // credentials: the billing workspace cookie must travel (also cross-origin in local dev).
+  const res = await fetch(`${API_BASE}${path}`, { credentials: "include", ...init });
   if (res.status === 204) return undefined as T;
   if (!res.ok) {
     let detail = "";
@@ -127,4 +141,17 @@ export const api = {
     ),
 
   getInspection: (id: number) => request<Inspection>(`/inspections/${id}`),
+
+  plans: () => request<Plan[]>("/plans"),
+
+  startCheckout: (plan: PlanId, interval: BillingInterval) =>
+    request<{ url: string }>("/billing/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan, interval }),
+    }),
+
+  billingStatus: () => request<BillingStatus>("/billing/status"),
+
+  openPortal: () => request<{ url: string }>("/billing/portal", { method: "POST" }),
 };

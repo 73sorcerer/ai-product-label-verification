@@ -57,6 +57,26 @@ Upload a label and check it against a spec.
 History, newest first. `200` → `Inspection[]` / `Inspection`; `404` if the inspection doesn't exist.
 An unknown `spec_id` filter returns `[]`, not `404`.
 
+## Billing (ADR 0003, test mode only)
+
+All billing calls identify the caller by the signed `lg_workspace` cookie (ADR 0004), so the frontend sends requests with `credentials: "include"`. The first call creates the cookie.
+
+| Route | Request | Response |
+|---|---|---|
+| `GET /plans` | n/a | `200 Plan[]` in order starter, professional, enterprise. Works without Stripe configured |
+| `POST /billing/checkout` | `{"plan": "starter\|professional\|enterprise", "interval": "monthly\|annual"}` | `200 {"url"}` (redirect the browser there) · `409` already subscribed ("Use Manage billing…") · `422` bad plan/interval · `502` Stripe price missing · `503` billing not configured |
+| `GET /billing/status` | n/a | `200 BillingStatus`. All null before the webhook has recorded a subscription (never 404) |
+| `POST /billing/portal` | n/a | `200 {"url"}` (Stripe Customer Portal) · `404` no subscription for this workspace · `503` not configured |
+| `POST /billing/webhook` | Stripe only (signed) | `200 {"status": "ok\|duplicate\|ignored"}` · `400` bad signature · `503` no webhook secret |
+
+```ts
+type Plan = { id: "starter" | "professional" | "enterprise"; name: string; monthly_cents: number; annual_cents: number;
+  inspections_per_month: number | null; saved_specs: number | null; history_days: number | null; // null = unlimited
+  highlight: boolean; trial_days: 14 };
+type BillingStatus = { plan: Plan["id"] | null; interval: "monthly" | "annual" | null; status: string | null; // Stripe status
+  trial_end: string | null; current_period_end: string | null; payment_failed: boolean };
+```
+
 ## Schemas
 
 ```ts

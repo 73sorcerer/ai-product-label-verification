@@ -24,6 +24,10 @@ The backend gets requests at `/api/...`. A service-level rewrite in `vercel.json
 | `NEXT_PUBLIC_API_URL` | frontend | optional override; defaults to `/api` (production) or `http://localhost:8000` (dev) | n/a |
 | `CORS_ORIGINS` | backend, local only | `http://localhost:3000` (default) | n/a |
 | `OCR_ENGINE` | backend | `rapidocr` (default) | n/a |
+| `STRIPE_SECRET_KEY` | backend | **test-mode** key (`sk_test_…` / prefer restricted `rk_test_…`); live keys are refused | Stripe Marketplace integration |
+| `STRIPE_WEBHOOK_SECRET` | backend | signing secret of the production webhook endpoint | `backend/scripts/stripe_setup.py` |
+| `WORKSPACE_SECRET` | backend | random 32-byte hex; signs the `lg_workspace` cookie | `vercel env add` (never echoed) |
+| `PUBLIC_URL` | backend | `https://ai-product-label-verification.vercel.app`; Stripe return URLs (Origin is only trusted if allowlisted) | `vercel env add` |
 
 Never commit secrets. `vercel env pull` writes `.env.local`, which is git-ignored.
 
@@ -60,3 +64,9 @@ The frontend picks its API address automatically: `/api` in production builds, `
 | 413 on upload | Image over 4.5 MB; compress on the client. |
 | `/api/docs` blank | `root_path` not set: the `VERCEL` env var is missing (only happens outside Vercel). |
 | History disappears | Running on SQLite fallback; `DATABASE_URL` not set for that environment. |
+
+## Billing (Stripe, test mode)
+
+- Stripe sandbox via the Vercel Marketplace; Products/Prices/Portal/webhook created by `python backend/scripts/stripe_setup.py --env-file .env.stripe` (idempotent; never prints secrets).
+- Webhook: `https://ai-product-label-verification.vercel.app/api/billing/webhook` (production only; previews are behind Vercel login). Local: `stripe listen --forward-to localhost:8000/billing/webhook`.
+- Test card: 4242 4242 4242 4242, any future date, any CVC. Stripe Tax is off (no registration).

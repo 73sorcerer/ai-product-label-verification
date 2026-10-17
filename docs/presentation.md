@@ -19,6 +19,7 @@
 4. Upload `granola_missing_allergens.png` → **Needs Review**, `allergens` missing.
 5. Create spec **VitaCore**, then upload `vitamin_low_quality.jpg`. This is the key moment: the label is *correct*, but the photo is bad. OCR reads the date as `06/312028`, and the app says **uncertain, retake the photo** rather than "wrong expiry date". Explain that confidence scores are what prevent a false rejection.
 6. Open **History** → all inspections with timestamps.
+6b. **Pricing** (professor requirement): open Pricing → toggle Annual ("2 months free") → Professional → **Start 14-day trial** → Stripe Checkout with card 4242 4242 4242 4242 → "Confirming your subscription…" flips to "You're on Professional" → sidebar badge "Professional · Trial" → **Manage billing** opens Stripe's portal. Talking point: Stripe handles payment, renewals and cancellation; our signed webhook is the single source of plan state; test mode, tax out of scope.
 7. Show a green GitHub Actions run and a merged PR.
 
 **Fallback:** if the deployed site is down, run locally (`uvicorn` + `npm run dev`) with the same script. Keep screenshots of each step in `docs/demo/` as a last resort.
