@@ -80,6 +80,7 @@ function InspectContent() {
   }
   return <div className="inspect-page">
     <div className="page-heading"><div><h1>New inspection</h1><p>Select a product specification, upload a label photo, and get verification results.</p></div></div>
+    {demo && !file && preview && <p className="demo-notice">Demo inspection — preloaded sample label and illustrative results.</p>}
     <div className="inspection-workspace">
       <section className="inspection-input-panel"><form onSubmit={submit}>
         <h2>1. Select product spec</h2>

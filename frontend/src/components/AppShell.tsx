@@ -10,10 +10,10 @@ import Sidebar, { NAV_ITEMS, isNavActive } from "./Sidebar";
 function MarketingHeader() {
   return <header className="marketing-header">
     <Link href="/" aria-label="VeriLabel home" className="home-brand"><Logo variant="light" /></Link>
-    <nav aria-label="Product navigation" className="marketing-links">
-      <a href="#product">Product</a><a href="#solutions">Solutions</a><a href="#resources">Resources</a><a href="#pricing">Pricing</a>
+    <nav aria-label="Primary" className="marketing-links">
+      {NAV_ITEMS.map(item => <Link key={item.href} href={item.href} aria-current={item.href === "/" ? "page" : undefined}>{item.label}</Link>)}
     </nav>
-    <div className="marketing-actions"><Link href="/specs" className="outline-button">Sign in</Link><Link href="/specs?new=1" className="primary-button">Request a pilot</Link></div>
+    <div className="marketing-actions"><Link href="/inspect?demo=1" className="primary-button">Try a Sample Inspection</Link><Link href="/specs?new=1" className="outline-button">Create a Specification</Link></div>
   </header>;
 }
 
