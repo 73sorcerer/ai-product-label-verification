@@ -1,0 +1,1799 @@
+{
+  "info": {
+    "name": "LabelGuard API",
+    "description": "Seeds data and tests every endpoint in docs/api-contract.md. Run the folders in order: later requests use ids saved by earlier ones.\n\nFile uploads use paths relative to the repo root: set the Postman working directory (Settings → General → Working directory) to the repo, or pass `--working-dir .` to the Postman CLI.\n\nEach run adds 4 specs and 9 inspections to the database it points at. Don't run it against production in a loop.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "granola_id",
+      "value": ""
+    },
+    {
+      "key": "coffee_id",
+      "value": ""
+    },
+    {
+      "key": "vitamin_id",
+      "value": ""
+    },
+    {
+      "key": "last_inspection_id",
+      "value": ""
+    },
+    {
+      "key": "granola_inspection_count",
+      "value": ""
+    },
+    {
+      "key": "coffee_inspection_count",
+      "value": ""
+    },
+    {
+      "key": "vitamin_inspection_count",
+      "value": ""
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Reset per-run counters on the first request so re-runs in the app stay accurate.",
+          "if (pm.info.requestName === \"Health check\") {",
+          "  [\"granola\", \"coffee\", \"vitamin\"].forEach(k => pm.collectionVariables.set(`${k}_inspection_count`, 0));",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Health",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"API and database are up\", () => {",
+                  "  const b = pm.response.json();",
+                  "  pm.expect(b.status).to.eql(\"ok\");",
+                  "  pm.expect(b.database).to.be.oneOf([\"sqlite\", \"postgresql\"]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": ""
+    },
+    {
+      "name": "2. Specs",
+      "item": [
+        {
+          "name": "Create spec: granola",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/specs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "specs"
+              ]
+            },
+            "description": "Creates the approved spec from data/sample_labels/specs.json and saves its id as {{granola_id}}.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Golden Harvest Granola\",\n  \"fields\": {\n    \"brand\": \"Sunrise Farms\",\n    \"product_name\": \"Golden Harvest Granola\",\n    \"net_contents\": \"Net Wt 12 oz (340 g)\",\n    \"allergens\": \"Contains: Oats, Almonds, Milk\",\n    \"sku\": \"SKU: SF-GRN-12\",\n    \"best_by\": \"Best By: 03/15/2027\",\n    \"manufacturer\": \"Sunrise Farms Co., Portland, OR\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", () => pm.response.to.have.status(201));",
+                  "const spec = pm.response.json();",
+                  "pm.test(\"has ProductSpec shape\", () => {",
+                  "  pm.expect(spec).to.have.all.keys(\"id\", \"name\", \"fields\", \"created_at\");",
+                  "  pm.expect(spec.id).to.be.a(\"number\");",
+                  "  pm.expect(spec.created_at).to.match(/\\+00:00$/);  // ISO 8601 UTC",
+                  "});",
+                  "pm.test(\"echoes name and fields\", () => {",
+                  "  pm.expect(spec.name).to.eql(\"Golden Harvest Granola\");",
+                  "  pm.expect(spec.fields).to.eql({\"brand\": \"Sunrise Farms\", \"product_name\": \"Golden Harvest Granola\", \"net_contents\": \"Net Wt 12 oz (340 g)\", \"allergens\": \"Contains: Oats, Almonds, Milk\", \"sku\": \"SKU: SF-GRN-12\", \"best_by\": \"Best By: 03/15/2027\", \"manufacturer\": \"Sunrise Farms Co., Portland, OR\"});",
+                  "});",
+                  "pm.collectionVariables.set(\"granola_id\", spec.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create spec: coffee",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/specs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "specs"
+              ]
+            },
+            "description": "Creates the approved spec from data/sample_labels/specs.json and saves its id as {{coffee_id}}.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Peak Cold Brew\",\n  \"fields\": {\n    \"brand\": \"Peak Roasters\",\n    \"product_name\": \"Cold Brew Coffee\",\n    \"net_contents\": \"16 FL OZ (473 mL)\",\n    \"allergens\": \"Contains: Milk\",\n    \"sku\": \"SKU: PR-CB-16\",\n    \"best_by\": \"Best By: 01/10/2027\",\n    \"manufacturer\": \"Peak Roasters LLC, Denver, CO\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", () => pm.response.to.have.status(201));",
+                  "const spec = pm.response.json();",
+                  "pm.test(\"has ProductSpec shape\", () => {",
+                  "  pm.expect(spec).to.have.all.keys(\"id\", \"name\", \"fields\", \"created_at\");",
+                  "  pm.expect(spec.id).to.be.a(\"number\");",
+                  "  pm.expect(spec.created_at).to.match(/\\+00:00$/);  // ISO 8601 UTC",
+                  "});",
+                  "pm.test(\"echoes name and fields\", () => {",
+                  "  pm.expect(spec.name).to.eql(\"Peak Cold Brew\");",
+                  "  pm.expect(spec.fields).to.eql({\"brand\": \"Peak Roasters\", \"product_name\": \"Cold Brew Coffee\", \"net_contents\": \"16 FL OZ (473 mL)\", \"allergens\": \"Contains: Milk\", \"sku\": \"SKU: PR-CB-16\", \"best_by\": \"Best By: 01/10/2027\", \"manufacturer\": \"Peak Roasters LLC, Denver, CO\"});",
+                  "});",
+                  "pm.collectionVariables.set(\"coffee_id\", spec.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create spec: vitamin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/specs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "specs"
+              ]
+            },
+            "description": "Creates the approved spec from data/sample_labels/specs.json and saves its id as {{vitamin_id}}.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"VitaCore Daily Multivitamin\",\n  \"fields\": {\n    \"brand\": \"VitaCore\",\n    \"product_name\": \"Daily Multivitamin\",\n    \"net_contents\": \"60 Tablets\",\n    \"allergens\": \"Contains: Soy\",\n    \"sku\": \"SKU: VC-MV-060\",\n    \"best_by\": \"Best By: 08/31/2028\",\n    \"manufacturer\": \"VitaCore Health, Austin, TX\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", () => pm.response.to.have.status(201));",
+                  "const spec = pm.response.json();",
+                  "pm.test(\"has ProductSpec shape\", () => {",
+                  "  pm.expect(spec).to.have.all.keys(\"id\", \"name\", \"fields\", \"created_at\");",
+                  "  pm.expect(spec.id).to.be.a(\"number\");",
+                  "  pm.expect(spec.created_at).to.match(/\\+00:00$/);  // ISO 8601 UTC",
+                  "});",
+                  "pm.test(\"echoes name and fields\", () => {",
+                  "  pm.expect(spec.name).to.eql(\"VitaCore Daily Multivitamin\");",
+                  "  pm.expect(spec.fields).to.eql({\"brand\": \"VitaCore\", \"product_name\": \"Daily Multivitamin\", \"net_contents\": \"60 Tablets\", \"allergens\": \"Contains: Soy\", \"sku\": \"SKU: VC-MV-060\", \"best_by\": \"Best By: 08/31/2028\", \"manufacturer\": \"VitaCore Health, Austin, TX\"});",
+                  "});",
+                  "pm.collectionVariables.set(\"vitamin_id\", spec.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create spec: trims whitespace",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/specs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "specs"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"  Trim Test  \",\n  \"fields\": {\n    \" brand \": \"  Sunrise Farms \"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", () => pm.response.to.have.status(201));",
+                  "const spec = pm.response.json();",
+                  "pm.test(\"has ProductSpec shape\", () => {",
+                  "  pm.expect(spec).to.have.all.keys(\"id\", \"name\", \"fields\", \"created_at\");",
+                  "  pm.expect(spec.id).to.be.a(\"number\");",
+                  "  pm.expect(spec.created_at).to.match(/\\+00:00$/);  // ISO 8601 UTC",
+                  "});",
+                  "pm.test(\"name, keys and values are trimmed\", () => {",
+                  "  pm.expect(spec.name).to.eql(\"Trim Test\");",
+                  "  pm.expect(spec.fields).to.eql({ brand: \"Sunrise Farms\" });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create spec: missing name → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/specs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "specs"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fields\": {\n    \"brand\": \"X\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"FastAPI validation detail\", () => pm.expect(pm.response.json().detail).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create spec: blank name → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/specs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "specs"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"   \",\n  \"fields\": {\n    \"brand\": \"X\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"FastAPI validation detail\", () => pm.expect(pm.response.json().detail).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create spec: name over 200 chars → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/specs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "specs"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\",\n  \"fields\": {\n    \"brand\": \"X\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"FastAPI validation detail\", () => pm.expect(pm.response.json().detail).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create spec: empty fields → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/specs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "specs"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"X\",\n  \"fields\": {}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"FastAPI validation detail\", () => pm.expect(pm.response.json().detail).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create spec: blank field value → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/specs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "specs"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"X\",\n  \"fields\": {\n    \"brand\": \"\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"FastAPI validation detail\", () => pm.expect(pm.response.json().detail).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create spec: non-string value → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/specs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "specs"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"X\",\n  \"fields\": {\n    \"net_contents\": 12\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"FastAPI validation detail\", () => pm.expect(pm.response.json().detail).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List specs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/specs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "specs"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "const list = pm.response.json();",
+                  "pm.test(\"returns an array containing the seeded specs\", () => {",
+                  "  const ids = list.map(s => s.id);",
+                  "  [\"granola_id\", \"coffee_id\", \"vitamin_id\"].forEach(v => pm.expect(ids).to.include(pm.collectionVariables.get(v)));",
+                  "});",
+                  "pm.test(\"oldest first (ids ascending)\", () => {",
+                  "  const ids = list.map(s => s.id);",
+                  "  pm.expect(ids).to.eql([...ids].sort((a, b) => a - b));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get spec by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/specs/{{coffee_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "specs",
+                "{{coffee_id}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "const spec = pm.response.json();",
+                  "pm.test(\"has ProductSpec shape\", () => {",
+                  "  pm.expect(spec).to.have.all.keys(\"id\", \"name\", \"fields\", \"created_at\");",
+                  "  pm.expect(spec.id).to.be.a(\"number\");",
+                  "  pm.expect(spec.created_at).to.match(/\\+00:00$/);  // ISO 8601 UTC",
+                  "});",
+                  "pm.test(\"is the coffee spec\", () => {",
+                  "  pm.expect(spec.id).to.eql(pm.collectionVariables.get(\"coffee_id\"));",
+                  "  pm.expect(spec.fields).to.eql({\"brand\": \"Peak Roasters\", \"product_name\": \"Cold Brew Coffee\", \"net_contents\": \"16 FL OZ (473 mL)\", \"allergens\": \"Contains: Milk\", \"sku\": \"SKU: PR-CB-16\", \"best_by\": \"Best By: 01/10/2027\", \"manufacturer\": \"Peak Roasters LLC, Denver, CO\"});",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get spec: unknown id → 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/specs/999999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "specs",
+                "999999999"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"says not found\", () => pm.expect(pm.response.json().detail).to.include(\"not found\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get spec: id beyond INTEGER range → 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/specs/99999999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "specs",
+                "99999999999"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get spec: non-integer id → 422",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/specs/granola",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "specs",
+                "granola"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 422\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Creates the three approved specs and checks validation, listing and lookup."
+    },
+    {
+      "name": "3. OCR",
+      "item": [
+        {
+          "name": "OCR a label",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ocr",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ocr"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": "data/sample_labels/granola_correct.png"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "const r = pm.response.json();",
+                  "pm.test(\"has OcrResult shape\", () => pm.expect(r).to.have.all.keys(\"text\", \"lines\", \"mean_confidence\", \"engine\"));",
+                  "pm.test(\"reads the brand\", () => pm.expect(r.text).to.include(\"Sunrise Farms\"));",
+                  "pm.test(\"confidence is 0-1\", () => pm.expect(r.mean_confidence).to.be.within(0, 1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "OCR: non-image → 422",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ocr",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ocr"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": "README.md"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"explains why\", () => pm.expect(pm.response.json().detail).to.eql(\"File is not a readable image\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": ""
+    },
+    {
+      "name": "4. Inspections",
+      "item": [
+        {
+          "name": "Inspect granola_correct.png → pass",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/inspections",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "inspections"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "spec_id",
+                  "type": "text",
+                  "value": "{{granola_id}}"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": "data/sample_labels/granola_correct.png"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", () => pm.response.to.have.status(201));",
+                  "const insp = pm.response.json();",
+                  "const expected = {\"status\": \"pass\", \"flags\": {}, \"degraded\": false};",
+                  "const got = Object.fromEntries(insp.results.map(f => [f.field, f.status]));",
+                  "pm.test(\"has Inspection shape\", () => pm.expect(insp).to.have.all.keys(\"id\", \"spec_id\", \"image_filename\", \"status\", \"ocr\", \"results\", \"created_at\"));",
+                  "pm.test(\"linked to the granola spec\", () => pm.expect(insp.spec_id).to.eql(pm.collectionVariables.get(\"granola_id\")));",
+                  "pm.test(\"records the filename\", () => pm.expect(insp.image_filename).to.eql(\"granola_correct.png\"));",
+                  "pm.test(`overall status is ${expected.status}`, () => pm.expect(insp.status, JSON.stringify(got)).to.eql(expected.status));",
+                  "Object.entries(expected.flags).forEach(([field, st]) =>",
+                  "  pm.test(`${field} is ${st}`, () => pm.expect(got[field], JSON.stringify(got)).to.eql(st)));",
+                  "if (!expected.degraded) {",
+                  "  pm.test(\"every other field matches\", () => Object.entries(got).forEach(([field, st]) => {",
+                  "    if (!(field in expected.flags)) pm.expect(st, field).to.eql(\"match\");",
+                  "  }));",
+                  "}",
+                  "pm.collectionVariables.set(\"last_inspection_id\", insp.id);",
+                  "pm.collectionVariables.set(\"granola_inspection_count\", (Number(pm.collectionVariables.get(\"granola_inspection_count\")) || 0) + 1);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inspect granola_wrong_net_weight.png → net_contents incorrect",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/inspections",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "inspections"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "spec_id",
+                  "type": "text",
+                  "value": "{{granola_id}}"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": "data/sample_labels/granola_wrong_net_weight.png"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", () => pm.response.to.have.status(201));",
+                  "const insp = pm.response.json();",
+                  "const expected = {\"status\": \"needs_review\", \"flags\": {\"net_contents\": \"incorrect\"}, \"degraded\": false};",
+                  "const got = Object.fromEntries(insp.results.map(f => [f.field, f.status]));",
+                  "pm.test(\"has Inspection shape\", () => pm.expect(insp).to.have.all.keys(\"id\", \"spec_id\", \"image_filename\", \"status\", \"ocr\", \"results\", \"created_at\"));",
+                  "pm.test(\"linked to the granola spec\", () => pm.expect(insp.spec_id).to.eql(pm.collectionVariables.get(\"granola_id\")));",
+                  "pm.test(\"records the filename\", () => pm.expect(insp.image_filename).to.eql(\"granola_wrong_net_weight.png\"));",
+                  "pm.test(`overall status is ${expected.status}`, () => pm.expect(insp.status, JSON.stringify(got)).to.eql(expected.status));",
+                  "Object.entries(expected.flags).forEach(([field, st]) =>",
+                  "  pm.test(`${field} is ${st}`, () => pm.expect(got[field], JSON.stringify(got)).to.eql(st)));",
+                  "if (!expected.degraded) {",
+                  "  pm.test(\"every other field matches\", () => Object.entries(got).forEach(([field, st]) => {",
+                  "    if (!(field in expected.flags)) pm.expect(st, field).to.eql(\"match\");",
+                  "  }));",
+                  "}",
+                  "pm.collectionVariables.set(\"last_inspection_id\", insp.id);",
+                  "pm.collectionVariables.set(\"granola_inspection_count\", (Number(pm.collectionVariables.get(\"granola_inspection_count\")) || 0) + 1);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inspect granola_missing_allergens.png → allergens missing",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/inspections",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "inspections"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "spec_id",
+                  "type": "text",
+                  "value": "{{granola_id}}"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": "data/sample_labels/granola_missing_allergens.png"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", () => pm.response.to.have.status(201));",
+                  "const insp = pm.response.json();",
+                  "const expected = {\"status\": \"needs_review\", \"flags\": {\"allergens\": \"missing\"}, \"degraded\": false};",
+                  "const got = Object.fromEntries(insp.results.map(f => [f.field, f.status]));",
+                  "pm.test(\"has Inspection shape\", () => pm.expect(insp).to.have.all.keys(\"id\", \"spec_id\", \"image_filename\", \"status\", \"ocr\", \"results\", \"created_at\"));",
+                  "pm.test(\"linked to the granola spec\", () => pm.expect(insp.spec_id).to.eql(pm.collectionVariables.get(\"granola_id\")));",
+                  "pm.test(\"records the filename\", () => pm.expect(insp.image_filename).to.eql(\"granola_missing_allergens.png\"));",
+                  "pm.test(`overall status is ${expected.status}`, () => pm.expect(insp.status, JSON.stringify(got)).to.eql(expected.status));",
+                  "Object.entries(expected.flags).forEach(([field, st]) =>",
+                  "  pm.test(`${field} is ${st}`, () => pm.expect(got[field], JSON.stringify(got)).to.eql(st)));",
+                  "if (!expected.degraded) {",
+                  "  pm.test(\"every other field matches\", () => Object.entries(got).forEach(([field, st]) => {",
+                  "    if (!(field in expected.flags)) pm.expect(st, field).to.eql(\"match\");",
+                  "  }));",
+                  "}",
+                  "pm.collectionVariables.set(\"last_inspection_id\", insp.id);",
+                  "pm.collectionVariables.set(\"granola_inspection_count\", (Number(pm.collectionVariables.get(\"granola_inspection_count\")) || 0) + 1);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inspect coffee_correct.png → pass",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/inspections",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "inspections"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "spec_id",
+                  "type": "text",
+                  "value": "{{coffee_id}}"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": "data/sample_labels/coffee_correct.png"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", () => pm.response.to.have.status(201));",
+                  "const insp = pm.response.json();",
+                  "const expected = {\"status\": \"pass\", \"flags\": {}, \"degraded\": false};",
+                  "const got = Object.fromEntries(insp.results.map(f => [f.field, f.status]));",
+                  "pm.test(\"has Inspection shape\", () => pm.expect(insp).to.have.all.keys(\"id\", \"spec_id\", \"image_filename\", \"status\", \"ocr\", \"results\", \"created_at\"));",
+                  "pm.test(\"linked to the coffee spec\", () => pm.expect(insp.spec_id).to.eql(pm.collectionVariables.get(\"coffee_id\")));",
+                  "pm.test(\"records the filename\", () => pm.expect(insp.image_filename).to.eql(\"coffee_correct.png\"));",
+                  "pm.test(`overall status is ${expected.status}`, () => pm.expect(insp.status, JSON.stringify(got)).to.eql(expected.status));",
+                  "Object.entries(expected.flags).forEach(([field, st]) =>",
+                  "  pm.test(`${field} is ${st}`, () => pm.expect(got[field], JSON.stringify(got)).to.eql(st)));",
+                  "if (!expected.degraded) {",
+                  "  pm.test(\"every other field matches\", () => Object.entries(got).forEach(([field, st]) => {",
+                  "    if (!(field in expected.flags)) pm.expect(st, field).to.eql(\"match\");",
+                  "  }));",
+                  "}",
+                  "pm.collectionVariables.set(\"last_inspection_id\", insp.id);",
+                  "pm.collectionVariables.set(\"coffee_inspection_count\", (Number(pm.collectionVariables.get(\"coffee_inspection_count\")) || 0) + 1);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inspect coffee_brand_typo.png → brand incorrect",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/inspections",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "inspections"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "spec_id",
+                  "type": "text",
+                  "value": "{{coffee_id}}"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": "data/sample_labels/coffee_brand_typo.png"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", () => pm.response.to.have.status(201));",
+                  "const insp = pm.response.json();",
+                  "const expected = {\"status\": \"needs_review\", \"flags\": {\"brand\": \"incorrect\"}, \"degraded\": false};",
+                  "const got = Object.fromEntries(insp.results.map(f => [f.field, f.status]));",
+                  "pm.test(\"has Inspection shape\", () => pm.expect(insp).to.have.all.keys(\"id\", \"spec_id\", \"image_filename\", \"status\", \"ocr\", \"results\", \"created_at\"));",
+                  "pm.test(\"linked to the coffee spec\", () => pm.expect(insp.spec_id).to.eql(pm.collectionVariables.get(\"coffee_id\")));",
+                  "pm.test(\"records the filename\", () => pm.expect(insp.image_filename).to.eql(\"coffee_brand_typo.png\"));",
+                  "pm.test(`overall status is ${expected.status}`, () => pm.expect(insp.status, JSON.stringify(got)).to.eql(expected.status));",
+                  "Object.entries(expected.flags).forEach(([field, st]) =>",
+                  "  pm.test(`${field} is ${st}`, () => pm.expect(got[field], JSON.stringify(got)).to.eql(st)));",
+                  "if (!expected.degraded) {",
+                  "  pm.test(\"every other field matches\", () => Object.entries(got).forEach(([field, st]) => {",
+                  "    if (!(field in expected.flags)) pm.expect(st, field).to.eql(\"match\");",
+                  "  }));",
+                  "}",
+                  "pm.collectionVariables.set(\"last_inspection_id\", insp.id);",
+                  "pm.collectionVariables.set(\"coffee_inspection_count\", (Number(pm.collectionVariables.get(\"coffee_inspection_count\")) || 0) + 1);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inspect coffee_wrong_best_by.png → best_by incorrect",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/inspections",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "inspections"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "spec_id",
+                  "type": "text",
+                  "value": "{{coffee_id}}"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": "data/sample_labels/coffee_wrong_best_by.png"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", () => pm.response.to.have.status(201));",
+                  "const insp = pm.response.json();",
+                  "const expected = {\"status\": \"needs_review\", \"flags\": {\"best_by\": \"incorrect\"}, \"degraded\": false};",
+                  "const got = Object.fromEntries(insp.results.map(f => [f.field, f.status]));",
+                  "pm.test(\"has Inspection shape\", () => pm.expect(insp).to.have.all.keys(\"id\", \"spec_id\", \"image_filename\", \"status\", \"ocr\", \"results\", \"created_at\"));",
+                  "pm.test(\"linked to the coffee spec\", () => pm.expect(insp.spec_id).to.eql(pm.collectionVariables.get(\"coffee_id\")));",
+                  "pm.test(\"records the filename\", () => pm.expect(insp.image_filename).to.eql(\"coffee_wrong_best_by.png\"));",
+                  "pm.test(`overall status is ${expected.status}`, () => pm.expect(insp.status, JSON.stringify(got)).to.eql(expected.status));",
+                  "Object.entries(expected.flags).forEach(([field, st]) =>",
+                  "  pm.test(`${field} is ${st}`, () => pm.expect(got[field], JSON.stringify(got)).to.eql(st)));",
+                  "if (!expected.degraded) {",
+                  "  pm.test(\"every other field matches\", () => Object.entries(got).forEach(([field, st]) => {",
+                  "    if (!(field in expected.flags)) pm.expect(st, field).to.eql(\"match\");",
+                  "  }));",
+                  "}",
+                  "pm.collectionVariables.set(\"last_inspection_id\", insp.id);",
+                  "pm.collectionVariables.set(\"coffee_inspection_count\", (Number(pm.collectionVariables.get(\"coffee_inspection_count\")) || 0) + 1);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inspect vitamin_correct.png → pass",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/inspections",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "inspections"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "spec_id",
+                  "type": "text",
+                  "value": "{{vitamin_id}}"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": "data/sample_labels/vitamin_correct.png"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", () => pm.response.to.have.status(201));",
+                  "const insp = pm.response.json();",
+                  "const expected = {\"status\": \"pass\", \"flags\": {}, \"degraded\": false};",
+                  "const got = Object.fromEntries(insp.results.map(f => [f.field, f.status]));",
+                  "pm.test(\"has Inspection shape\", () => pm.expect(insp).to.have.all.keys(\"id\", \"spec_id\", \"image_filename\", \"status\", \"ocr\", \"results\", \"created_at\"));",
+                  "pm.test(\"linked to the vitamin spec\", () => pm.expect(insp.spec_id).to.eql(pm.collectionVariables.get(\"vitamin_id\")));",
+                  "pm.test(\"records the filename\", () => pm.expect(insp.image_filename).to.eql(\"vitamin_correct.png\"));",
+                  "pm.test(`overall status is ${expected.status}`, () => pm.expect(insp.status, JSON.stringify(got)).to.eql(expected.status));",
+                  "Object.entries(expected.flags).forEach(([field, st]) =>",
+                  "  pm.test(`${field} is ${st}`, () => pm.expect(got[field], JSON.stringify(got)).to.eql(st)));",
+                  "if (!expected.degraded) {",
+                  "  pm.test(\"every other field matches\", () => Object.entries(got).forEach(([field, st]) => {",
+                  "    if (!(field in expected.flags)) pm.expect(st, field).to.eql(\"match\");",
+                  "  }));",
+                  "}",
+                  "pm.collectionVariables.set(\"last_inspection_id\", insp.id);",
+                  "pm.collectionVariables.set(\"vitamin_inspection_count\", (Number(pm.collectionVariables.get(\"vitamin_inspection_count\")) || 0) + 1);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inspect vitamin_wrong_sku.png → sku incorrect",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/inspections",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "inspections"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "spec_id",
+                  "type": "text",
+                  "value": "{{vitamin_id}}"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": "data/sample_labels/vitamin_wrong_sku.png"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", () => pm.response.to.have.status(201));",
+                  "const insp = pm.response.json();",
+                  "const expected = {\"status\": \"needs_review\", \"flags\": {\"sku\": \"incorrect\"}, \"degraded\": false};",
+                  "const got = Object.fromEntries(insp.results.map(f => [f.field, f.status]));",
+                  "pm.test(\"has Inspection shape\", () => pm.expect(insp).to.have.all.keys(\"id\", \"spec_id\", \"image_filename\", \"status\", \"ocr\", \"results\", \"created_at\"));",
+                  "pm.test(\"linked to the vitamin spec\", () => pm.expect(insp.spec_id).to.eql(pm.collectionVariables.get(\"vitamin_id\")));",
+                  "pm.test(\"records the filename\", () => pm.expect(insp.image_filename).to.eql(\"vitamin_wrong_sku.png\"));",
+                  "pm.test(`overall status is ${expected.status}`, () => pm.expect(insp.status, JSON.stringify(got)).to.eql(expected.status));",
+                  "Object.entries(expected.flags).forEach(([field, st]) =>",
+                  "  pm.test(`${field} is ${st}`, () => pm.expect(got[field], JSON.stringify(got)).to.eql(st)));",
+                  "if (!expected.degraded) {",
+                  "  pm.test(\"every other field matches\", () => Object.entries(got).forEach(([field, st]) => {",
+                  "    if (!(field in expected.flags)) pm.expect(st, field).to.eql(\"match\");",
+                  "  }));",
+                  "}",
+                  "pm.collectionVariables.set(\"last_inspection_id\", insp.id);",
+                  "pm.collectionVariables.set(\"vitamin_inspection_count\", (Number(pm.collectionVariables.get(\"vitamin_inspection_count\")) || 0) + 1);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inspect vitamin_low_quality.jpg → allergens uncertain, best_by uncertain",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/inspections",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "inspections"
+              ]
+            },
+            "description": "manufacturer reads 'VitaCore Heath' at 0.95 confidence; flagging it incorrect is an acceptable false alarm (status is needs_review either way).",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "spec_id",
+                  "type": "text",
+                  "value": "{{vitamin_id}}"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": "data/sample_labels/vitamin_low_quality.jpg"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", () => pm.response.to.have.status(201));",
+                  "const insp = pm.response.json();",
+                  "const expected = {\"status\": \"needs_review\", \"flags\": {\"allergens\": \"uncertain\", \"best_by\": \"uncertain\"}, \"degraded\": true};",
+                  "const got = Object.fromEntries(insp.results.map(f => [f.field, f.status]));",
+                  "pm.test(\"has Inspection shape\", () => pm.expect(insp).to.have.all.keys(\"id\", \"spec_id\", \"image_filename\", \"status\", \"ocr\", \"results\", \"created_at\"));",
+                  "pm.test(\"linked to the vitamin spec\", () => pm.expect(insp.spec_id).to.eql(pm.collectionVariables.get(\"vitamin_id\")));",
+                  "pm.test(\"records the filename\", () => pm.expect(insp.image_filename).to.eql(\"vitamin_low_quality.jpg\"));",
+                  "pm.test(`overall status is ${expected.status}`, () => pm.expect(insp.status, JSON.stringify(got)).to.eql(expected.status));",
+                  "Object.entries(expected.flags).forEach(([field, st]) =>",
+                  "  pm.test(`${field} is ${st}`, () => pm.expect(got[field], JSON.stringify(got)).to.eql(st)));",
+                  "if (!expected.degraded) {",
+                  "  pm.test(\"every other field matches\", () => Object.entries(got).forEach(([field, st]) => {",
+                  "    if (!(field in expected.flags)) pm.expect(st, field).to.eql(\"match\");",
+                  "  }));",
+                  "}",
+                  "pm.collectionVariables.set(\"last_inspection_id\", insp.id);",
+                  "pm.collectionVariables.set(\"vitamin_inspection_count\", (Number(pm.collectionVariables.get(\"vitamin_inspection_count\")) || 0) + 1);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inspect: unknown spec → 404",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/inspections",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "inspections"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "spec_id",
+                  "type": "text",
+                  "value": "999999"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": "data/sample_labels/coffee_correct.png"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inspect: non-image → 422",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/inspections",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "inspections"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "spec_id",
+                  "type": "text",
+                  "value": "{{coffee_id}}"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": "README.md"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"explains why\", () => pm.expect(pm.response.json().detail).to.eql(\"File is not a readable image\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inspect: missing image → 422",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/inspections",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "inspections"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "spec_id",
+                  "type": "text",
+                  "value": "{{coffee_id}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"FastAPI validation detail\", () => pm.expect(pm.response.json().detail).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inspect: missing spec_id → 422",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/inspections",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "inspections"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": "data/sample_labels/coffee_correct.png"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"FastAPI validation detail\", () => pm.expect(pm.response.json().detail).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inspect: non-integer spec_id → 422",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/inspections",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "inspections"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "spec_id",
+                  "type": "text",
+                  "value": "coffee"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": "data/sample_labels/coffee_correct.png"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"FastAPI validation detail\", () => pm.expect(pm.response.json().detail).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "One inspection per sample label; expectations come from data/sample_labels/manifest.json."
+    },
+    {
+      "name": "5. History",
+      "item": [
+        {
+          "name": "Get inspection by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/inspections/{{last_inspection_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "inspections",
+                "{{last_inspection_id}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "const insp = pm.response.json();",
+                  "pm.test(\"is the last inspection created\", () => pm.expect(insp.id).to.eql(pm.collectionVariables.get(\"last_inspection_id\")));",
+                  "pm.test(\"OCR result was saved with it\", () => pm.expect(insp.ocr.lines).to.be.an(\"array\").that.is.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get inspection: unknown id → 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/inspections/999999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "inspections",
+                "999999999"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get inspection: non-integer id → 422",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/inspections/latest",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "inspections",
+                "latest"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 422\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List inspections (newest first)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/inspections",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "inspections"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "const ids = pm.response.json().map(i => i.id);",
+                  "pm.test(\"includes the last inspection\", () => pm.expect(ids).to.include(pm.collectionVariables.get(\"last_inspection_id\")));",
+                  "pm.test(\"newest first\", () => pm.expect(ids).to.eql([...ids].sort((a, b) => b - a)));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List inspections for one spec",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/inspections?spec_id={{coffee_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "inspections"
+              ],
+              "query": [
+                {
+                  "key": "spec_id",
+                  "value": "{{coffee_id}}"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "const list = pm.response.json();",
+                  "const coffee = pm.collectionVariables.get(\"coffee_id\");",
+                  "pm.test(\"only that spec's inspections\", () => list.forEach(i => pm.expect(i.spec_id).to.eql(coffee)));",
+                  "pm.test(\"all of this run's coffee inspections\", () =>",
+                  "  pm.expect(list.length).to.eql(Number(pm.collectionVariables.get(\"coffee_inspection_count\"))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List inspections: unknown spec → []",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/inspections?spec_id=999999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "inspections"
+              ],
+              "query": [
+                {
+                  "key": "spec_id",
+                  "value": "999999999"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"empty list\", () => pm.expect(pm.response.json()).to.eql([]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List inspections: non-integer spec_id → 422",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/inspections?spec_id=coffee",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "inspections"
+              ],
+              "query": [
+                {
+                  "key": "spec_id",
+                  "value": "coffee"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 422\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": ""
+    }
+  ]
+}
