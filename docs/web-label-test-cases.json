@@ -1,0 +1,108 @@
+{
+  "note": "Hand-transcribed from the downloaded images. Targets are intended outcomes, not guaranteed OCR results or a completed HTTP E2E run.",
+  "cases": [
+    {
+      "case": "01-easy-pass",
+      "image": "cinnamon-ingredients.jpg",
+      "spec": {
+        "name": "Web test - Cinnamon ingredients",
+        "fields": {
+          "ingredients": "INGREDIENTS: CINNAMON"
+        }
+      },
+      "target_status": "pass",
+      "notes": "Manufacturer ingredients-panel artwork; start here."
+    },
+    {
+      "case": "02-front-label",
+      "image": "cinnamon-front.png",
+      "spec": {
+        "name": "Web test - Cinnamon front",
+        "fields": {
+          "product_name": "CINNAMON",
+          "form": "GROUND",
+          "net_contents": "NET WT 2.37 OZ"
+        }
+      },
+      "target_status": "pass",
+      "notes": "Actual front packshot. Do not add ingredients/allergens absent from this view."
+    },
+    {
+      "case": "03-wrong-weight",
+      "image": "cinnamon-front.png",
+      "spec": {
+        "name": "Web test - Cinnamon wrong expected weight",
+        "fields": {
+          "product_name": "CINNAMON",
+          "net_contents": "NET WT 9.37 OZ"
+        }
+      },
+      "target_status": "needs_review",
+      "notes": "Deliberately incorrect SPEC value; the original image is unchanged. Expect a flagged weight; exact field status depends on OCR/matching."
+    },
+    {
+      "case": "04-soy-front",
+      "image": "kikkoman-soy-15oz.webp",
+      "spec": {
+        "name": "Web test - Soy sauce front",
+        "fields": {
+          "brand": "KIKKOMAN",
+          "product_name": "Soy Sauce",
+          "net_contents": "15 FL OZ (444 mL)"
+        }
+      },
+      "target_status": "pass",
+      "notes": "Transparent WebP. Manufacturer image includes transparent padding; keep original bytes."
+    },
+    {
+      "case": "05-missing-panel",
+      "image": "kikkoman-soy-15oz.webp",
+      "spec": {
+        "name": "Web test - Soy ingredients absent from front",
+        "fields": {
+          "ingredients": "Water, Soybeans, Wheat, Salt."
+        }
+      },
+      "target_status": "needs_review",
+      "notes": "Ingredients are documented by the manufacturer but NOT visible in this front photo. Expected field status: missing."
+    },
+    {
+      "case": "06-oats-front",
+      "image": "oats-front.jpg",
+      "spec": {
+        "name": "Web test - Rolled oats front",
+        "fields": {
+          "product_name": "ROLLED OATS",
+          "variant": "OLD FASHIONED",
+          "net_contents": "NET WT 32 OZ (2 LB) 907g"
+        }
+      },
+      "target_status": "pass",
+      "notes": "Large packaging text with a curved lower net-weight line."
+    },
+    {
+      "case": "07-oats-back",
+      "image": "oats-back.jpg",
+      "spec": {
+        "name": "Web test - Rolled oats back",
+        "fields": {
+          "ingredients": "INGREDIENT: Whole Grain Oats."
+        }
+      },
+      "target_status": "pass",
+      "notes": "Real back panel; useful dense-text challenge."
+    },
+    {
+      "case": "08-nutrition-panel",
+      "image": "cinnamon-nutrition.jpg",
+      "spec": {
+        "name": "Web test - Cinnamon nutrition",
+        "fields": {
+          "serving_size": "Serving size 1/4 tsp. (0.6g)"
+        }
+      },
+      "target_status": "pass",
+      "notes": "Manufacturer nutrition-panel artwork; dense numbers and units."
+    }
+  ]
+}
