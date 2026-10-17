@@ -137,10 +137,11 @@ def _vercel_env_add(secret: str) -> None:
 
 
 def _load_env_file(path: str) -> None:
+    """Read ONLY STRIPE_SECRET_KEY from a pulled env file (least privilege: no DATABASE_URL etc.)."""
     for line in Path(path).read_text().splitlines():
-        if "=" in line and not line.lstrip().startswith("#"):
-            k, _, v = line.partition("=")
-            os.environ.setdefault(k.strip(), v.strip().strip('"'))
+        k, sep, v = line.partition("=")
+        if sep and k.strip() == "STRIPE_SECRET_KEY":
+            os.environ.setdefault("STRIPE_SECRET_KEY", v.strip().strip('"'))
 
 
 def main() -> int:

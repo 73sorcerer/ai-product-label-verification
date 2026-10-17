@@ -103,3 +103,15 @@ def test_verify_reports_missing_vercel_settings():
     missing = stripe_setup.missing_env(lambda: {"STRIPE_SECRET_KEY", "PUBLIC_URL"})
     assert missing == ["STRIPE_WEBHOOK_SECRET", "WORKSPACE_SECRET"]
     assert stripe_setup.missing_env(lambda: set(stripe_setup.REQUIRED_ENV)) == []
+
+
+def test_env_file_loads_only_the_stripe_key(tmp_path, monkeypatch):
+    """Least privilege: the setup script must not pull DATABASE_URL etc. into its process."""
+    for name in ("STRIPE_SECRET_KEY", "DATABASE_URL", "WORKSPACE_SECRET"):
+        monkeypatch.delenv(name, raising=False)
+    env = tmp_path / ".env.stripe"
+    env.write_text('STRIPE_SECRET_KEY="sk_test_abc"\nDATABASE_URL="postgres://x"\nWORKSPACE_SECRET="s"\n')
+    stripe_setup._load_env_file(str(env))
+    import os
+    assert os.environ.get("STRIPE_SECRET_KEY") == "sk_test_abc"
+    assert "DATABASE_URL" not in os.environ and "WORKSPACE_SECRET" not in os.environ
