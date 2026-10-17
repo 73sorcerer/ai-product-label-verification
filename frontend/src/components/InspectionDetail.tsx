@@ -1,4 +1,4 @@
-import type { Inspection } from "@/lib/api";
+import type { InspectionRecord } from "@/lib/mock-data";
 import { FieldBadge, InspectionBadge } from "./StatusBadge";
 
 /** Lines below this confidence are shown dimmed (contract: < 0.90 is uncertain). */
@@ -29,7 +29,7 @@ export default function InspectionDetail({
   inspection,
   evidenceUrl,
 }: {
-  inspection: Inspection;
+  inspection: InspectionRecord;
   /** Cropped thumbnail of the flagged label region, from the uploaded bytes. */
   evidenceUrl?: string | null;
 }) {

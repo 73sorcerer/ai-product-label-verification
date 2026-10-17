@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import Logo from "./Logo";
+import SampleBanner from "./SampleBanner";
 import Sidebar, { NAV_ITEMS, isNavActive } from "./Sidebar";
 
 function MarketingHeader() {
@@ -92,6 +93,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         <MobileNav />
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
           {children}
+          <SampleBanner />
         </main>
         <footer className="py-6 text-center text-xs text-ink-500">
           VeriLabel · CSE 651 demo

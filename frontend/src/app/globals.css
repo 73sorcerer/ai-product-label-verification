@@ -76,3 +76,5 @@ body {
     animation: none;
   }
 }
+
+.sample-banner { margin-top:16px; padding:7px 12px; border:1px solid #d8eaf6; border-radius:6px; background:#eef8fc; color:#426083; font-size:12px; }

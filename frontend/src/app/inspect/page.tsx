@@ -1,11 +1,12 @@
 "use client";
+import type { InspectionRecord } from "@/lib/mock-data";
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   api,
   friendlyErrorMessage,
-  type Inspection,
+  
   type OcrResult,
   type ProductSpec,
 } from "@/lib/api";
@@ -68,7 +69,7 @@ function InspectContent() {
   const [submitting, setSubmitting] = useState(false);
   const [compressNote, setCompressNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [inspection, setInspection] = useState<Inspection | null>(null);
+  const [inspection, setInspection] = useState<InspectionRecord | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [evidenceUrl, setEvidenceUrl] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);

@@ -1,11 +1,12 @@
 "use client";
+import type { InspectionRecord } from "@/lib/mock-data";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   api,
   friendlyErrorMessage,
-  type Inspection,
+  
   type ProductSpec,
 } from "@/lib/api";
 import { InspectionBadge } from "@/components/StatusBadge";
@@ -46,12 +47,12 @@ function initials(name: string): string {
   return (first + second).toUpperCase();
 }
 
-function issueCount(insp: Inspection): number {
+function issueCount(insp: InspectionRecord): number {
   return insp.results.filter((r) => r.status !== "match").length;
 }
 
 export default function HistoryPage() {
-  const [inspections, setInspections] = useState<Inspection[]>([]);
+  const [inspections, setInspections] = useState<InspectionRecord[]>([]);
   const [specs, setSpecs] = useState<ProductSpec[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -141,7 +142,7 @@ export default function HistoryPage() {
     safePage * PAGE_SIZE + PAGE_SIZE
   );
 
-  const productName = (insp: Inspection) =>
+  const productName = (insp: InspectionRecord) =>
     specNames.get(insp.spec_id) ?? insp.image_filename;
 
   return (
