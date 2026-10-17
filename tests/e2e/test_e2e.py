@@ -24,6 +24,16 @@ def test_ocr_rejects_a_non_image(api):
     assert r.status_code == 422
 
 
+def test_specs_and_history_are_readable(api):
+    """Read-only check that runs against production too: both lists load and have the contract shape."""
+    specs = require_implemented(api.get("/specs"))
+    assert specs.status_code == 200
+    assert all({"id", "name", "fields"} <= s.keys() for s in specs.json())
+    history = require_implemented(api.get("/inspections"))
+    assert history.status_code == 200
+    assert all({"id", "status", "results"} <= i.keys() for i in history.json())
+
+
 def test_unknown_spec_is_404(api):
     r = require_implemented(api.get("/specs/999999999"))
     assert r.status_code == 404
