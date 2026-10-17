@@ -64,10 +64,10 @@ All billing calls identify the caller by the signed `lg_workspace` cookie (ADR 0
 | Route | Request | Response |
 |---|---|---|
 | `GET /plans` | n/a | `200 Plan[]` in order starter, professional, enterprise. Works without Stripe configured |
-| `POST /billing/checkout` | `{"plan": "starter\|professional\|enterprise", "interval": "monthly\|annual"}` | `200 {"url"}` (redirect the browser there) · `409` already subscribed ("Use Manage billing…") · `422` bad plan/interval · `502` Stripe price missing · `503` billing not configured |
+| `POST /billing/checkout` | `{"plan": "starter\|professional\|enterprise", "interval": "monthly\|annual"}` | `200 {"url"}` (redirect the browser there; the **same** open session is returned again for the same plan, and a different plan expires the old one: one open checkout per workspace, 30 min) · `409` already subscribed ("Use Manage billing…") · `422` bad plan/interval · `502` Stripe price missing · `503` billing not configured |
 | `GET /billing/status` | n/a | `200 BillingStatus`. All null before the webhook has recorded a subscription (never 404) |
 | `POST /billing/portal` | n/a | `200 {"url"}` (Stripe Customer Portal) · `404` no subscription for this workspace · `503` not configured |
-| `POST /billing/webhook` | Stripe only (signed) | `200 {"status": "ok\|duplicate\|ignored"}` · `400` bad signature · `503` no webhook secret |
+| `POST /billing/webhook` | Stripe only (signed) | `200 {"status": "ok\|duplicate\|ignored"}` · `400` bad signature · `503` no webhook secret or API key (Stripe retries). Events are triggers only: the subscription is re-read from Stripe, so delivery order can't regress state |
 
 ```ts
 type Plan = { id: "starter" | "professional" | "enterprise"; name: string; monthly_cents: number; annual_cents: number;

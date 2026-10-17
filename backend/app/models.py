@@ -60,6 +60,21 @@ class Subscription(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now, onupdate=_now)
 
 
+class PendingCheckout(Base):
+    """The one open Stripe Checkout Session per workspace (review finding 1): reused while open,
+    expired at Stripe when replaced, deleted on checkout.session.completed / .expired."""
+
+    __tablename__ = "pending_checkouts"
+
+    workspace_id: Mapped[str] = mapped_column(String(64), primary_key=True)  # PK = one per workspace, race-safe
+    session_id: Mapped[str] = mapped_column(String(255))
+    url: Mapped[str] = mapped_column(String(2048))
+    plan: Mapped[str] = mapped_column(String(20))
+    billing_interval: Mapped[str] = mapped_column(String(10))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+
+
 class ProcessedEvent(Base):
     """Stripe event IDs already handled; makes webhook retries no-ops."""
 

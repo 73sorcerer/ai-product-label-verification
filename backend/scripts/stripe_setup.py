@@ -6,6 +6,11 @@ OWNER: Tray. Test mode only. Never prints a secret.
     python backend/scripts/stripe_setup.py --env-file .env.stripe
     rm .env.stripe
 
+Recovery: Stripe returns a webhook secret only when the endpoint is created. If saving it to Vercel
+fails, the new endpoint is deleted again, so simply rerun. If the secret was lost some other way,
+rerun with --rotate-webhook (recreates the endpoint and saves the new secret). The run only reports
+success after confirming every required Vercel variable exists.
+
 The webhook signing secret is written straight to Vercel (`vercel env add STRIPE_WEBHOOK_SECRET
 production`) through stdin when the endpoint is first created.
 """
@@ -25,6 +30,7 @@ from app import plans  # noqa: E402
 WEBHOOK_URL = "https://ai-product-label-verification.vercel.app/api/billing/webhook"
 WEBHOOK_EVENTS = [
     "checkout.session.completed",
+    "checkout.session.expired",
     "customer.subscription.created",
     "customer.subscription.updated",
     "customer.subscription.deleted",
@@ -86,16 +92,42 @@ def _product_of(client, price_id: str) -> str:
     return client.v1.prices.retrieve(price_id).product
 
 
-def ensure_webhook(client, write_secret, log=print) -> None:
-    for endpoint in client.v1.webhook_endpoints.list(params={"limit": 100}).data:
-        if endpoint.url == WEBHOOK_URL:
-            client.v1.webhook_endpoints.update(endpoint.id, params={"enabled_events": WEBHOOK_EVENTS})
-            log(f"exists  webhook {endpoint.id} (events refreshed; secret unchanged)")
-            return
+REQUIRED_ENV = ("STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "WORKSPACE_SECRET", "PUBLIC_URL")
+
+
+def ensure_webhook(client, write_secret, log=print, rotate: bool = False) -> None:
+    for endpoint in list(client.v1.webhook_endpoints.list(params={"limit": 100}).data):
+        if endpoint.url != WEBHOOK_URL:
+            continue
+        if rotate:
+            client.v1.webhook_endpoints.delete(endpoint.id)
+            log(f"deleted webhook {endpoint.id} (rotating)")
+            continue
+        client.v1.webhook_endpoints.update(endpoint.id, params={"enabled_events": WEBHOOK_EVENTS})
+        log(f"exists  webhook {endpoint.id} (events refreshed; secret unchanged)")
+        return
     endpoint = client.v1.webhook_endpoints.create(params={"url": WEBHOOK_URL, "enabled_events": WEBHOOK_EVENTS,
                                                           "description": "VeriLabel production webhook"})
-    write_secret(endpoint.secret)  # never printed
+    try:
+        write_secret(endpoint.secret)  # never printed
+    except Exception:
+        # The secret can't be fetched again later: drop the endpoint so a rerun creates a fresh one.
+        client.v1.webhook_endpoints.delete(endpoint.id)
+        log(f"saving the signing secret failed; deleted webhook {endpoint.id}. Rerun to retry.")
+        raise
     log(f"created webhook {endpoint.id}; signing secret written to Vercel")
+
+
+def missing_env(list_names) -> list[str]:
+    """Required Vercel production variables that don't exist (names only; values never read)."""
+    present = set(list_names())
+    return [name for name in REQUIRED_ENV if name not in present]
+
+
+def _vercel_env_names() -> set[str]:
+    vercel = shutil.which("vercel") or "vercel"
+    out = subprocess.run([vercel, "env", "ls", "production"], capture_output=True, text=True, check=True).stdout
+    return {line.split()[0] for line in out.splitlines() if line.strip() and line.split()[0].isupper()}
 
 
 def _vercel_env_add(secret: str) -> None:
@@ -114,6 +146,7 @@ def _load_env_file(path: str) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--env-file")
+    parser.add_argument("--rotate-webhook", action="store_true", help="recreate the webhook endpoint and save a new secret")
     args = parser.parse_args()
     if args.env_file:
         _load_env_file(args.env_file)
@@ -126,7 +159,14 @@ def main() -> int:
     client = StripeClient(key, stripe_version=STRIPE_API_VERSION)
     price_ids = ensure_catalog(client)
     ensure_portal(client, price_ids)
-    ensure_webhook(client, _vercel_env_add)
+    ensure_webhook(client, _vercel_env_add, rotate=args.rotate_webhook)
+    missing = missing_env(_vercel_env_names)
+    if missing:
+        print(f"NOT DONE: missing Vercel production variables: {', '.join(missing)}", file=sys.stderr)
+        if "STRIPE_WEBHOOK_SECRET" in missing:
+            print("Rerun with --rotate-webhook to recreate the endpoint and save its secret.", file=sys.stderr)
+        return 1
+    print("OK: catalog, portal, webhook and Vercel variables verified. Redeploy to apply new variables.")
     return 0
 
 
