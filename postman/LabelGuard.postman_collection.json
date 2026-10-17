@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "LabelGuard API",
+    "name": "VeriLabel API",
     "description": "Seeds data and tests every endpoint in docs/api-contract.md. Run the folders in order: later requests use ids saved by earlier ones.\n\nFile uploads use paths relative to the repo root: set the Postman working directory (Settings → General → Working directory) to the repo, or pass `--working-dir .` to the Postman CLI.\n\nEach run adds 4 specs and 9 inspections to the database it points at. Don't run it against production in a loop.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },

@@ -207,7 +207,7 @@ def folder(name, items, desc=""):
 
 collection = {
     "info": {
-        "name": "LabelGuard API",
+        "name": "VeriLabel API",
         "description": (
             "Seeds data and tests every endpoint in docs/api-contract.md. Run the folders in order: "
             "later requests use ids saved by earlier ones.\n\n"

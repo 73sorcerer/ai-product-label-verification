@@ -1,4 +1,4 @@
-# AI Product Label Verification
+# VeriLabel: AI Product Label Verification
 
 CSE 651 (Software Development with Agentic AI) · Demo: **Oct 20, 2026**
 

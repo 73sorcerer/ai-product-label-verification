@@ -1,9 +1,9 @@
 ---
 name: labelguard-testing
-description: Use when running, writing, or debugging tests for the LabelGuard product label verification app — backend unit tests, OCR accuracy checks, end-to-end tests against a local or deployed server, or adding a new sample label. Also use when a verification result looks wrong and you need to tell an OCR misread from a comparison bug.
+description: Use when running, writing, or debugging tests for the VeriLabel product label verification app — backend unit tests, OCR accuracy checks, end-to-end tests against a local or deployed server, or adding a new sample label. Also use when a verification result looks wrong and you need to tell an OCR misread from a comparison bug.
 ---
 
-# LabelGuard testing
+# VeriLabel testing
 
 Three test layers, cheapest first. Run them in this order and stop at the first failure.
 

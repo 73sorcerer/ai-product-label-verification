@@ -1,4 +1,3 @@
-import { fixtureRequest, type InspectionRecord } from "./mock-data";
 // Types copied from docs/api-contract.md — keep in sync with the backend.
 // The frontend and backend build against that file; if it changes,
 // update these types first.
@@ -59,21 +58,6 @@ export class ApiError extends Error {
   }
 }
 
-let sampleMode = process.env.NEXT_PUBLIC_USE_MOCKS === "true";
-const sampleListeners = new Set<() => void>();
-export const isSampleMode = () => sampleMode;
-export function subscribeSampleMode(listener: () => void) {
-  sampleListeners.add(listener);
-  return () => { sampleListeners.delete(listener); };
-}
-function sampleResponse<T>(path: string, init?: RequestInit): T {
-  const data = fixtureRequest(path, init);
-  if (data === undefined) throw new ApiError(404, "Sample record not found.");
-  sampleMode = true;
-  sampleListeners.forEach(listener => listener());
-  return structuredClone(data) as T;
-}
-
 /** Turn any fetch failure into a short, human-readable message. */
 export function friendlyErrorMessage(err: unknown): string {
   if (err instanceof ApiError) {
@@ -90,10 +74,8 @@ export function friendlyErrorMessage(err: unknown): string {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const hasFixture = /^\/(specs|inspections)(\/|\?|$)/.test(path);
-  if (hasFixture && (process.env.NEXT_PUBLIC_USE_MOCKS === "true" || sampleMode)) return sampleResponse<T>(path, init);
   const res = await fetch(`${API_BASE}${path}`, init);
-  if (res.status === 501 && hasFixture) return sampleResponse<T>(path, init);
+  if (res.status === 204) return undefined as T;
   if (!res.ok) {
     let detail = "";
     try {
@@ -110,7 +92,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export const api = {
   health: () => request<{ status: string }>("/health"),
 
-  /** OCR only, no comparison. Works now — useful while /inspections is a stub. */
+  /** OCR only, no comparison. */
   // Callers shrink large photos first with prepareImage() from ./image (Vercel's 4.5 MB limit).
   ocr: (image: File) => {
     const form = new FormData();
@@ -121,6 +103,9 @@ export const api = {
   listSpecs: () => request<ProductSpec[]>("/specs"),
 
   getSpec: (id: number) => request<ProductSpec>(`/specs/${id}`),
+
+  /** 409 if the spec already has inspections (they'd lose their reference). */
+  deleteSpec: (id: number) => request<void>(`/specs/${id}`, { method: "DELETE" }),
 
   createSpec: (name: string, fields: Record<string, string>) =>
     request<ProductSpec>("/specs", {
@@ -133,13 +118,13 @@ export const api = {
     const form = new FormData();
     form.append("spec_id", String(specId));
     form.append("image", image);
-    return request<InspectionRecord>("/inspections", { method: "POST", body: form });
+    return request<Inspection>("/inspections", { method: "POST", body: form });
   },
 
   listInspections: (specId?: number) =>
-    request<InspectionRecord[]>(
+    request<Inspection[]>(
       specId != null ? `/inspections?spec_id=${specId}` : "/inspections",
     ),
 
-  getInspection: (id: number) => request<InspectionRecord>(`/inspections/${id}`),
+  getInspection: (id: number) => request<Inspection>(`/inspections/${id}`),
 };

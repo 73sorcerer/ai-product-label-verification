@@ -54,14 +54,27 @@ def test_rejects_unknown_engine(monkeypatch):
 # --- preprocessing -----------------------------------------------------------
 
 
-def test_preprocess_upscales_small_images_and_grayscales():
+def test_preprocess_upscales_until_long_side_is_min_and_keeps_color():
+    """Color matters: red text on a yellow label is nearly invisible in grayscale (real Kikkoman label).
+    Upscaling matters: the detector misses small print (e.g. net contents) on 1200 px product shots."""
     out = ocr.preprocess(Image.new("RGB", (400, 200), "white"))
-    assert out.mode == "L"
-    assert out.size == (ocr.MIN_WIDTH, 500)
+    assert out.mode == "RGB"
+    assert out.size == (ocr.MIN_LONG_SIDE, ocr.MIN_LONG_SIDE // 2)
+
+
+def test_preprocess_upscales_portrait_by_its_height():
+    assert ocr.preprocess(Image.new("RGB", (600, 1200))).size == (1000, ocr.MIN_LONG_SIDE)
 
 
 def test_preprocess_leaves_large_images_size_alone():
-    assert ocr.preprocess(Image.new("RGB", (1600, 900))).size == (1600, 900)
+    assert ocr.preprocess(Image.new("RGB", (2400, 1600))).size == (2400, 1600)
+
+
+def test_preprocess_puts_transparent_images_on_white():
+    rgba = Image.new("RGBA", (100, 100), (0, 0, 0, 0))  # fully transparent black
+    out = ocr.preprocess(rgba)
+    assert out.mode == "RGB"
+    assert out.getpixel((0, 0)) == (255, 255, 255)
 
 
 # --- parsers -----------------------------------------------------------------
@@ -161,7 +174,7 @@ def test_boxes_fit_inside_the_uploaded_image_even_when_upscaled():
     The frontend crops the *uploaded* image with these boxes, so they must be in its coordinates."""
     data = (SAMPLES / "vitamin_low_quality.jpg").read_bytes()
     width, height = Image.open(io.BytesIO(data)).size
-    assert width < ocr.MIN_WIDTH  # precondition: this image does get upscaled
+    assert max(width, height) < ocr.MIN_LONG_SIDE  # precondition: this image does get upscaled
     result = ocr.extract_text(data)
     assert result.lines
     for line in result.lines:
