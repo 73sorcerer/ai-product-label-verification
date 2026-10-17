@@ -39,11 +39,12 @@ export function InspectionBadge({
 }) {
   return (
     <span
+      data-status={status}
       className={`inline-flex items-center gap-1.5 rounded-full border font-semibold ${inspectionStyles[status]} ${
         big ? "px-5 py-2 text-xl" : "px-3 py-1 text-sm"
       }`}
     >
-      {status === "pass" ? <CheckIcon /> : <AlertIcon />}
+      {status === "pass" ? <CheckIcon /> : status === "error" ? <XIcon /> : <AlertIcon />}
       {inspectionLabels[status]}
     </span>
   );
