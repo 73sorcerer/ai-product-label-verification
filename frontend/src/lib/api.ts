@@ -2,8 +2,6 @@
 // The frontend and backend build against that file; if it changes,
 // update these types first.
 
-import { prepareImageForUpload } from "./image";
-
 export type ProductSpec = {
   id: number;
   name: string;
@@ -94,9 +92,10 @@ export const api = {
   health: () => request<{ status: string }>("/health"),
 
   /** OCR only, no comparison. Works now — useful while /inspections is a stub. */
-  ocr: async (image: File) => {
+  // Callers shrink large photos first with prepareImage() from ./image (Vercel's 4.5 MB limit).
+  ocr: (image: File) => {
     const form = new FormData();
-    form.append("image", await prepareImageForUpload(image));
+    form.append("image", image);
     return request<OcrResult>("/ocr", { method: "POST", body: form });
   },
 
@@ -111,10 +110,10 @@ export const api = {
       body: JSON.stringify({ name, fields }),
     }),
 
-  createInspection: async (specId: number, image: File) => {
+  createInspection: (specId: number, image: File) => {
     const form = new FormData();
     form.append("spec_id", String(specId));
-    form.append("image", await prepareImageForUpload(image));
+    form.append("image", image);
     return request<Inspection>("/inspections", { method: "POST", body: form });
   },
 

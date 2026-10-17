@@ -40,7 +40,17 @@ export async function prepareImage(file: File): Promise<PreparedImage> {
   const originalBytes = file.size;
   const url = URL.createObjectURL(file);
   try {
-    const img = await loadImage(url);
+    let img: HTMLImageElement;
+    try {
+      img = await loadImage(url);
+    } catch (err) {
+      // Browsers can't decode some formats (e.g. TIFF). The server can, so send small
+      // files as-is; only fail when the file actually needs shrinking.
+      if (originalBytes <= MAX_UPLOAD_BYTES) {
+        return { file, compressed: false, resized: false, originalBytes, finalBytes: originalBytes };
+      }
+      throw err;
+    }
     // Cap the longest side at 1600 px first, then compress until under 4 MB.
     const longest = Math.max(img.width, img.height);
     const downscale =
