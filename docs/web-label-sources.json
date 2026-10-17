@@ -1,0 +1,58 @@
+[
+  {
+    "file": "kikkoman-soy-15oz.webp",
+    "image_url": "https://kikkomanusa.com/wp-content/uploads/2026/05/00090-Soy-Suace-15-fl-oz.webp",
+    "product_page": "https://kikkomanusa.com/products/soy-sauce-non-gmo/soy-sauce-non-gmo-15-oz/",
+    "retrieved": "2026-10-17",
+    "bytes": 69546,
+    "sha256": "6ad58c84ca4d190c3e906be403f39196fffa0316d1952bb17a276cb05ee468ec"
+  },
+  {
+    "file": "cinnamon-front.png",
+    "image_url": "https://cdn.shopify.com/s/files/1/0686/4283/2583/files/00052100004389_McCormick_Ground_Cinnamon__2.37_oz-2024-08-29.png?v=1787247534",
+    "product_page": "https://www.mccormick.com/products/mccormick-ground-cinnamon-2-37-oz",
+    "retrieved": "2026-10-17",
+    "bytes": 275582,
+    "sha256": "35392fbdb1d93126db3ca0051e4500a11b30495b2d82dc140e0175f8823bc279"
+  },
+  {
+    "file": "cinnamon-ingredients.jpg",
+    "image_url": "https://cdn.shopify.com/s/files/1/0686/4283/2583/files/00052100004389_Ingredients-2024-08-15.jpg?v=1787247533",
+    "product_page": "https://www.mccormick.com/products/mccormick-ground-cinnamon-2-37-oz",
+    "retrieved": "2026-10-17",
+    "bytes": 30169,
+    "sha256": "10a53e78b20199df4389e1f0f3d61e2953cb683a33b33dd4fff3925fb23dcc20"
+  },
+  {
+    "file": "cinnamon-nutrition.jpg",
+    "image_url": "https://cdn.shopify.com/s/files/1/0686/4283/2583/files/00052100004389_Nutrition-2024-08-21.jpg?v=1787247534",
+    "product_page": "https://www.mccormick.com/products/mccormick-ground-cinnamon-2-37-oz",
+    "retrieved": "2026-10-17",
+    "bytes": 211616,
+    "sha256": "f68a688f5731eb7f9eecd61567c6e0c1d8c0d8f1139c20514809049aa9fc488c"
+  },
+  {
+    "file": "cinnamon-back.jpg",
+    "image_url": "https://cdn.shopify.com/s/files/1/0686/4283/2583/files/00052100004389_D_A2N1-2022-12-01.jpg?v=1787247533",
+    "product_page": "https://www.mccormick.com/products/mccormick-ground-cinnamon-2-37-oz",
+    "retrieved": "2026-10-17",
+    "bytes": 94507,
+    "sha256": "fe89f8eef2491cc716daf388a51b453fbeca6c634c16aaff1f461ed9b667f18a"
+  },
+  {
+    "file": "oats-front.jpg",
+    "image_url": "https://bobs-redmill.transforms.svdcdn.com/production/product/1360s324_regularrolledoats_f_3.jpg?w=1700&fm=jpeg&auto=compress&fit=max&dm=1753719743&s=68a7fec35d0751e006e8110d8c10538a",
+    "product_page": "https://www.bobsredmill.com/product/regular-rolled-oats",
+    "retrieved": "2026-10-17",
+    "bytes": 289727,
+    "sha256": "3ba39f53efebf01a728dba61a8e588816751bf910536de431998acab11566639"
+  },
+  {
+    "file": "oats-back.jpg",
+    "image_url": "https://bobs-redmill.transforms.svdcdn.com/production/product/1360s324_regularrolledoats_b_2.jpg?w=1700&fm=jpeg&auto=compress&fit=max&dm=1753719743&s=d190300c9a83c07328cd650689a123fb",
+    "product_page": "https://www.bobsredmill.com/product/regular-rolled-oats",
+    "retrieved": "2026-10-17",
+    "bytes": 262758,
+    "sha256": "68cf44aaed1d0d136a57fe9584493b03a5f594751aea1e7e424a24e1fc2068d9"
+  }
+]
