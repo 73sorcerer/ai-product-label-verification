@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import Logo from "./Logo";
-import { House, ClipboardCheck, ScanText, History, ChevronRight } from "lucide-react";
+import { House, ClipboardCheck, ScanText, History, Building2 } from "lucide-react";
 
 export const NAV_ITEMS: { href: string; label: string; icon: ReactNode }[] = [
   { href: "/", label: "Home", icon: <House size={20} strokeWidth={1.75} aria-hidden="true" /> },
@@ -45,10 +45,10 @@ export default function Sidebar() {
           );
         })}
       </nav>
-      <div className="mt-auto flex items-center gap-3 px-2 text-sm text-white">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#c8ddef] text-xs font-semibold text-[#234361]">TB</span>
-        <div><p>Tray Branch</p><p className="text-xs text-navy-200">Team</p></div>
-        <ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" className="ml-auto text-navy-200" />
+      {/* No accounts yet (ADR 0004), so don't show a signed-in user. */}
+      <div className="mt-auto flex items-center gap-3 px-2 text-sm text-white" title="Everyone using this site shares one workspace. Sign-in comes later.">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-navy-800 text-navy-200"><Building2 size={18} strokeWidth={1.75} aria-hidden="true" /></span>
+        <div><p>Demo workspace</p><p className="text-xs text-navy-200">No sign-in yet</p></div>
       </div>
     </aside>
   );

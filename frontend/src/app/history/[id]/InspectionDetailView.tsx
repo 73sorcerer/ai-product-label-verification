@@ -1,5 +1,5 @@
 "use client";
-import type { InspectionRecord } from "@/lib/mock-data";
+import type { Inspection } from "@/lib/api";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -7,7 +7,7 @@ import { api, friendlyErrorMessage } from "@/lib/api";
 import InspectionDetail from "@/components/InspectionDetail";
 
 export default function InspectionDetailView({ id }: { id: string }) {
-  const [inspection, setInspection] = useState<InspectionRecord | null>(null);
+  const [inspection, setInspection] = useState<Inspection | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
