@@ -91,13 +91,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
       <Sidebar />
       <div className="flex min-h-screen flex-col lg:pl-60">
         <MobileNav />
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
+        <main className="app-main w-full min-w-0 flex-1 px-4 py-6 sm:px-8 sm:py-8">
           {children}
           <SampleBanner />
         </main>
-        <footer className="py-6 text-center text-xs text-ink-500">
-          VeriLabel · CSE 651 demo
-        </footer>
       </div>
     </div>
   );

@@ -55,11 +55,11 @@ export function isNavActive(pathname: string, href: string) {
 export default function Sidebar() {
   const pathname = usePathname();
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col bg-navy-900 px-4 py-6 lg:flex">
+    <aside className="app-sidebar fixed inset-y-0 left-0 z-40 hidden w-60 flex-col bg-navy-900 px-3 py-7 lg:flex">
       <div className="px-2">
         <Logo variant="light" />
       </div>
-      <nav className="mt-10 flex flex-col gap-1.5" aria-label="Primary">
+      <nav className="mt-9 flex flex-col gap-1.5" aria-label="Primary">
         {NAV_ITEMS.map((item) => {
           const active = isNavActive(pathname, item.href);
           return (
@@ -69,7 +69,7 @@ export default function Sidebar() {
               aria-current={active ? "page" : undefined}
               className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-colors ${
                 active
-                  ? "bg-navy-800 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                  ? "border-l-2 border-[#00b6ee] bg-navy-800 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
                   : "text-navy-200 hover:bg-navy-800/60 hover:text-white"
               }`}
             >
@@ -79,9 +79,11 @@ export default function Sidebar() {
           );
         })}
       </nav>
-      <p className="mt-auto px-2 text-xs text-navy-200/60">
-        VeriLabel · CSE 651 demo
-      </p>
+      <div className="mt-auto flex items-center gap-3 px-2 text-sm text-white">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#c8ddef] text-xs font-semibold text-[#234361]">TB</span>
+        <div><p>Tray Branch <span className="ml-1 text-navy-200">›</span></p><p className="text-xs text-navy-200">Team</p></div>
+        <span aria-hidden="true" className="ml-auto text-navy-200">›</span>
+      </div>
     </aside>
   );
 }

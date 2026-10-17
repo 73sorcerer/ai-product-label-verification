@@ -2,14 +2,14 @@
 
 @theme {
   --color-navy-950: #071224;
-  --color-navy-900: #0a1a33;
-  --color-navy-800: #142b52;
+  --color-navy-900: #0b2237;
+  --color-navy-800: #20415d;
   --color-navy-700: #1e3d6e;
   --color-navy-200: #b7c7e3;
   --color-navy-100: #d8e2f4;
 
   --color-brand-700: #0a656a;
-  --color-brand-600: #0e7c82;
+  --color-brand-600: #00849a;
   --color-brand-500: #129098;
 
   --color-mist-50: #f4f8fc;
@@ -28,6 +28,8 @@ body {
   background: var(--color-mist-50);
   color: var(--color-ink-900);
 }
+.app-main { background: linear-gradient(120deg, #fff 25%, #f8fcff); }
+.app-sidebar { background: linear-gradient(100deg, #0a2034, #0d263c); }
 
 /* Reusable card surface */
 .card {
