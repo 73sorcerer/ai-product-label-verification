@@ -21,7 +21,9 @@ from functools import lru_cache
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 MAX_IMAGE_BYTES = 10 * 1024 * 1024
-MIN_WIDTH = 1000  # small images are upscaled; both engines miss small glyphs
+# Images are upscaled until the long side is at least this. The detector misses small print on
+# typical 1200 px product shots (e.g. "15 FL OZ" on a Kikkoman label); 1600 wasn't enough.
+MIN_LONG_SIDE = 2000
 ALLOWED_FORMATS = {"PNG", "JPEG", "WEBP", "BMP", "TIFF"}
 
 
@@ -87,12 +89,19 @@ def load_image(image_bytes: bytes) -> Image.Image:
 
 
 def preprocess(image: Image.Image) -> Image.Image:
-    """Fix phone-camera rotation, flatten to grayscale, upscale small images, stretch contrast."""
+    """Fix phone-camera rotation, flatten transparency onto white, upscale, stretch contrast.
+
+    Stays in color: red text on a yellow label is nearly invisible once converted to grayscale.
+    """
     image = ImageOps.exif_transpose(image)
-    image = image.convert("L")
-    if image.width < MIN_WIDTH:
-        scale = MIN_WIDTH / image.width
-        image = image.resize((MIN_WIDTH, round(image.height * scale)), Image.LANCZOS)
+    if image.mode in ("RGBA", "LA", "P", "PA"):
+        image = image.convert("RGBA")
+        image = Image.alpha_composite(Image.new("RGBA", image.size, "white"), image)
+    image = image.convert("RGB")
+    long_side = max(image.size)
+    if long_side < MIN_LONG_SIDE:
+        scale = MIN_LONG_SIDE / long_side
+        image = image.resize((round(image.width * scale), round(image.height * scale)), Image.LANCZOS)
     return ImageOps.autocontrast(image, cutoff=1)
 
 
