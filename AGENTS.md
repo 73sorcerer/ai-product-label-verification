@@ -17,7 +17,7 @@ LabelGuard: save an approved product label spec, upload a label photo, OCR reads
 | Area | Owner |
 |---|---|
 | `frontend/` | Wenyi |
-| `backend/app/main.py`, `models.py`, `database.py`, `verification.py` | Amzad |
+| `backend/app/main.py`, `models.py`, `database.py`, `verification.py`, `backend/tests/` (except `test_ocr.py`), `postman/` | Amzad |
 | `backend/app/ocr.py`, `data/sample_labels/`, `docs/`, `vercel.json`, `.github/workflows/` | Tray |
 | `docs/qa-test-plan.md`, `docs/demo-readiness.md`, `tests/e2e/`, `skills/` | Vincent |
 

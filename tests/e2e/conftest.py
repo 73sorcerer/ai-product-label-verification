@@ -2,6 +2,10 @@
 
     E2E_BASE_URL=http://localhost:8000 pytest tests/e2e          # local uvicorn (default)
     E2E_BASE_URL=https://<app>.vercel.app/api pytest tests/e2e   # deployed
+    E2E_READONLY=1 ...                                           # skip tests that create data
+
+Production runs use E2E_READONLY=1 (deploy-check.yml) so every merge doesn't add duplicate
+specs and test inspections to the live database the demo uses.
 """
 import json
 import os
@@ -13,6 +17,7 @@ import pytest
 SAMPLES = Path(__file__).resolve().parents[2] / "data" / "sample_labels"
 MANIFEST = json.loads((SAMPLES / "manifest.json").read_text())
 SPECS = json.loads((SAMPLES / "specs.json").read_text())
+READONLY = os.getenv("E2E_READONLY") == "1"
 
 
 @pytest.fixture(scope="session")
@@ -43,6 +48,8 @@ def require_implemented(response: httpx.Response) -> httpx.Response:
 @pytest.fixture(scope="session")
 def spec_ids(api):
     """Create each approved spec once per run; returns {"granola": 12, ...}."""
+    if READONLY:
+        pytest.skip("E2E_READONLY=1: this test creates specs and inspections")
     ids = {}
     for key, spec in SPECS.items():
         r = require_implemented(api.post("/specs", json=spec))
