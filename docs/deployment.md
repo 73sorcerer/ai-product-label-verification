@@ -46,7 +46,7 @@ The frontend picks its API address automatically: `/api` in production builds, `
 
 | Limit | Value | Impact |
 |---|---|---|
-| Request body | **4.5 MB** | Phone photos are often bigger. The frontend shrinks anything over 4 MB to 1600 px (JPEG) before upload (`frontend/src/lib/image.ts`). Without that, Vercel returns 413 before the API sees the request. |
+| Request body | **4.5 MB** | Phone photos are often bigger. The upload page resizes photos to 1600 px on the long side and re-compresses until under 4 MB (`frontend/src/lib/image.ts`). Without that, Vercel returns 413 before the API sees the request. |
 | Cold start | ~12 s on the first OCR call | The ONNX models load once per instance. Hit `/api/health` and one `/api/ocr` call before the demo. |
 | Warm OCR | ~2 s | n/a |
 | Function bundle | ~250 MB (OpenCV, onnxruntime, models, numpy) | Well under Vercel's 5 GB limit |
