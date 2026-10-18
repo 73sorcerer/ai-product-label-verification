@@ -117,6 +117,24 @@ On Oct 18, `tests/e2e/web_label_qa.py` rebuilt all seven original manufacturer f
 
 Reproduce with `python tests/e2e/web_label_qa.py download <outside-repo-directory>`, then run a **local** backend with an isolated `DATABASE_URL`, then `python tests/e2e/web_label_qa.py run <outside-repo-directory> --base-url http://127.0.0.1:<port>`. The runner refuses non-loopback APIs. The branded image bytes remain outside the Git repository.
 
+### 5b. Harder real-photo challenge (local API only)
+
+The [18-case challenge set](../tests/e2e/challenge/README.md) uses 11 **unchanged** Open Food Facts product photos, each visually inspected before its ground truth was written. [Sources, hashes, product links, and CC BY-SA 3.0 attribution](../tests/e2e/challenge/sources.json) accompany the images. It includes clean paired controls, rotated and glared cans, tiny ingredient text, multilingual panels, a low-light jar, clipped logo, and specs with deliberate wrong values. An Open Food Facts Nutella image tagged `ingredients` actually shows the front; its missing-panel case follows the visible pixels, not the metadata.
+
+On Oct 18 the isolated local API produced **14/18 expected overall verdicts, 11/18 exact field-status maps, and 18/18 persisted inspections**. The [full per-case result](../tests/e2e/challenge/results.json) retains OCR text, found values, confidence, expected/actual statuses, and History checks. No expected value was changed to match OCR output. The seven divergent cases were:
+
+| Case | Inspected expectation | Actual | Finding |
+|---|---|---|---|
+| B02 | Wrong `SICILIANA` variant → incorrect | missing; verdict still Needs Review | Wrong spec not localized to visible `GENOVESE` |
+| B04 | Visible `100 g` nutrition basis → pass | `g 100` marked incorrect | OCR word order changes a correct field |
+| C01 | Clipped product name → missing | `ORIJINAL TAT` marked incorrect | Unreadable print treated as genuine mismatch |
+| H01 | Visible Heinz, 14 OZ → pass | brand uncertain; OCR `14 0Z` marked incorrect | Low-resolution false alarms |
+| H04 | Wrong `PIMIENTO` ingredient → incorrect | missing; verdict still Needs Review | Genuine mismatch not localized to tomato line |
+| H05 | Visible `Porción: 12 g` → pass | unrelated `Porción` line marked incorrect | Correct OCR line lost during field matching |
+| N01 | Visible Nutella, 400G → pass | stylized brand read `Inutelal` and marked incorrect | Stylized logo false alarm |
+
+These findings are **local real-photo QA failures**, separate from the eight simpler manufacturer cases above. They do not establish production UI results. The remaining P1/P2 rows require fresh phone captures and device/browser testing.
+
 | # | Product photographed | Conditions (light, angle) | What OCR read | Verdict | Notes |
 |---|---|---|---|---|---|
 | P1 | | | | | |

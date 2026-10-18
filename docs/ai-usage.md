@@ -39,3 +39,4 @@
 
 | 2026-10-17 | Tray | Codex | Redesign the application README with polished graphics | Added original SVG hero and workflow artwork, live demo links, verdict explanations, architecture, verified local setup, documentation map and team credits; documentation only. |
 | 2026-10-18 | Vincent | Codex | Verify Tray's real product image QA pack and test-image requirements | Rebuilt and hash-verified seven public manufacturer images, ran all eight documented spec-to-history cases against isolated local SQLite, and documented results without changing answer keys or production data. |
+| 2026-10-18 | Vincent | Codex | Build a harder real-image QA set from public sources | Selected 11 unchanged Open Food Facts photos under CC BY-SA 3.0, visually inspected 18 case answer keys, ran isolated local API evaluation, and kept all seven field-status divergences visible in the report; generated draft images were excluded after Vincent prioritized real sources. |
