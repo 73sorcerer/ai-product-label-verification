@@ -117,15 +117,15 @@
       "truth_kind": "visible_match",
       "visible_truth": "Nutrition declaration is per 100 g, with French/German/Dutch text. This is a nutrition basis, not a serving size.",
       "expected_status": "pass",
-      "actual_status": "needs_review",
+      "actual_status": "pass",
       "expected_fields": {
         "nutrition_basis": "match"
       },
       "actual_fields": {
-        "nutrition_basis": "incorrect"
+        "nutrition_basis": "match"
       },
-      "verdict_met": false,
-      "fields_met": false,
+      "verdict_met": true,
+      "fields_met": true,
       "persisted": true,
       "ocr_mean_confidence": 0.9588,
       "ocr_text": "D\u00e9claration nutritionnelle-\nN\u00e4hrwertdeklaration-\nVoedingswaarden\ng 100\n\u00c9nergie - Energie -\nkJ2030\nEnergie\nkcal 492\nMati\u00e8res grasses - Fett-\nVetten\n47\n6\ndont acides gras satur\u00e9s-\ndavon ges\u00e4ttigte Fetts\u00e4uren -\ng 5,3\nwaarvan verzadigde vetzuren\nGlucides - Kohlenhydrate-\n11\nKoolhydraten\nB\ndont sucres - davon Zucker-\ng 5,0\nwaarvan suikers\nE\nFibres alimentaires -\n30\nBallaststoffe - Vezels\nProt\u00e9ines-Eiwei\u00df-Eiwitten\n32\n9\nSel-Sl - out\nGLUTENFREI/SANS GLUTEN/\nGLUTENVRIJ",
@@ -134,7 +134,7 @@
           "field": "nutrition_basis",
           "expected": "100 g",
           "found": "g 100",
-          "status": "incorrect",
+          "status": "match",
           "confidence": 0.97
         }
       ]
@@ -155,7 +155,7 @@
         "product_name": "missing"
       },
       "actual_fields": {
-        "product_name": "incorrect"
+        "product_name": "uncertain"
       },
       "verdict_met": true,
       "fields_met": false,
@@ -167,7 +167,7 @@
           "field": "product_name",
           "expected": "Coca-Cola Original Taste",
           "found": "ORIJINAL TAT",
-          "status": "incorrect",
+          "status": "uncertain",
           "confidence": 0.9409
         }
       ]
@@ -291,7 +291,7 @@
       "actual_fields": {
         "brand": "uncertain",
         "product_name": "match",
-        "net_contents": "incorrect"
+        "net_contents": "match"
       },
       "verdict_met": false,
       "fields_met": false,
@@ -317,7 +317,7 @@
           "field": "net_contents",
           "expected": "NET WT 14 OZ (397g)",
           "found": "NET WT 14 0Z (397g)",
-          "status": "incorrect",
+          "status": "match",
           "confidence": 0.9517
         }
       ]
@@ -432,15 +432,15 @@
       "truth_kind": "visible_match",
       "visible_truth": "Nutrition panel visibly says Porci\u00f3n: 12 g (1 cuchara de sopa).",
       "expected_status": "pass",
-      "actual_status": "needs_review",
+      "actual_status": "pass",
       "expected_fields": {
         "serving_size": "match"
       },
       "actual_fields": {
-        "serving_size": "incorrect"
+        "serving_size": "match"
       },
-      "verdict_met": false,
-      "fields_met": false,
+      "verdict_met": true,
+      "fields_met": true,
       "persisted": true,
       "ocr_mean_confidence": 0.9632,
       "ocr_text": "Peso Neto\nInformaci\u00f3n Nutricional\nPorci\u00f3n: 12 g (1 cuchara de sopa)\nCantidad por\n% VD M)\nPorci\u00f3n\n14 kcal =59 kJ\nValor energ\u00e9tico\n1\n4,0g\n\u4e00\nCarbohidratos\n0\n0g\nProteinas\n0\n0g\nGrasas totales\nGrasas saturadas\n0g\n0\nGrasas trans\n0g\nFibra alimentaria\n0g\n0\nSodio\n113mg\n5\n(*) % Valores Diarios con base a una dieta\nde 2000 kca\u00ed s 3400 kJ. Sus valores diario",
@@ -448,9 +448,9 @@
         {
           "field": "serving_size",
           "expected": "Porci\u00f3n: 12 g",
-          "found": "Porci\u00f3n",
-          "status": "incorrect",
-          "confidence": 0.9998
+          "found": "Porci\u00f3n: 12 g (1 cuchara de sopa)",
+          "status": "match",
+          "confidence": 0.9928
         }
       ]
     },
@@ -503,7 +503,7 @@
         "net_contents": "match"
       },
       "actual_fields": {
-        "brand": "incorrect",
+        "brand": "uncertain",
         "net_contents": "match"
       },
       "verdict_met": false,
@@ -516,7 +516,7 @@
           "field": "brand",
           "expected": "nutella",
           "found": "Inutelal",
-          "status": "incorrect",
+          "status": "uncertain",
           "confidence": 0.9029
         },
         {
