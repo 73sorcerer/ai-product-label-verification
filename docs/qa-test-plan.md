@@ -4,7 +4,7 @@
 
 Environment: https://ai-product-label-verification.vercel.app (OCR and read-only API checks); isolated local API and SQLite database (workflow checks) · Tester: Vincent via Codex · Dates: Oct 17–18, 2026 UTC
 
-Evidence scope: O1–O10 were measured against the deployed `/api/ocr` endpoint on Oct 17 using sample files from main commit `fe418ca`. On Oct 18, the current branch (based on main `6e838b3`) passed 179/179 backend unit tests and 21/21 local API end-to-end tests against an isolated SQLite database. The prior 16-test suite covered all nine manifest verdicts; this PR adds five synthetic HTTP regression cases and strengthens saved-result assertions. Six of Tray's public manufacturer image cases also passed through a separate isolated local API; two soy cases were unrun because the source URL returned 403. The deployed API passed 7/7 read-only-mode checks before the new cases were added (nine production write tests skipped). The expanded suite also passed in read-only mode locally: 7 passed, 14 write tests skipped. The local verdicts do **not** establish that the production UI, phone upload, or production write flow passed. Those rows remain open below.
+Evidence scope: O1–O10 were measured against the deployed `/api/ocr` endpoint on Oct 17 using sample files from main commit `fe418ca`. On Oct 18, the current branch (based on main `6e838b3`) passed 179/179 backend unit tests and 21/21 local API end-to-end tests against an isolated SQLite database. The prior 16-test suite covered all nine manifest verdicts; this PR adds five synthetic HTTP regression cases and strengthens saved-result assertions. All eight of Tray's public manufacturer image cases also matched their targets through a separate isolated local API. The deployed API passed 7/7 read-only-mode checks before the new cases were added (nine production write tests skipped). The expanded suite also passed in read-only mode locally: 7 passed, 14 write tests skipped. The local verdicts do **not** establish that the production UI, phone upload, or production write flow passed. Those rows remain open below.
 
 Result key: **PASS** matches expected · **FAIL** differs (file a bug, link it) · **BLOCKED** can't run yet (e.g. route not built)
 
@@ -102,15 +102,15 @@ The committed [QA fixture pack](../tests/e2e/fixtures/README.md) uses the team's
 
 Use the local test pack (`artifacts/web-label-test-pack.zip`, **not in the repo**: brand images, testing only) and at least two photos taken with a phone. For each: create a spec from the pack's expected values, upload on **Inspect** (not the sample), confirm the verdict persists in History. Start with `cinnamon-ingredients.jpg`.
 
-On Oct 18, `tests/e2e/web_label_qa.py` rebuilt six original manufacturer files from `docs/web-label-sources.json`; their byte sizes, SHA256 hashes, and image decoding matched. The Kikkoman WebP source returned HTTP 403, so cases 04–05 were **not run**. Against an isolated local API and SQLite database, the six available cases below created separate specs and inspections, matched the intended verdicts, and persisted identical details in `GET /inspections/{id}` and filtered History. The full OCR text and field evidence are in the local `web-label-test-pack-2026-10-18/local-api-results.json` report. These are API checks with manufacturer artwork, not production UI or phone photos.
+On Oct 18, `tests/e2e/web_label_qa.py` rebuilt all seven original manufacturer files from `docs/web-label-sources.json`; their byte sizes, SHA256 hashes, and image decoding matched. The Kikkoman WebP source rejected `httpx` with HTTP 403, but a browser-style `curl` request with the site referer fetched the **exact hash-matching bytes**. Against an isolated local API and SQLite database, all eight cases below created separate specs and inspections, matched the intended verdicts, and persisted identical details in `GET /inspections/{id}` and filtered History. The full OCR text and field evidence are in the local `web-label-test-pack-2026-10-18/local-api-results.json` report. These are API checks with manufacturer artwork, not production UI or phone photos.
 
 | Case | Image | Expected | Actual local API | Result |
 |---|---|---|---|---|
 | 01 | Cinnamon ingredients | pass | pass; ingredients match; saved | PASS |
 | 02 | Cinnamon front | pass | pass; name, form, weight match; saved | PASS |
 | 03 | Cinnamon front, wrong expected weight | needs_review | needs_review; weight incorrect; saved | PASS |
-| 04 | Soy sauce front | pass | Source WebP returned 403 | BLOCKED |
-| 05 | Soy sauce front, absent ingredients | needs_review | Source WebP returned 403 | BLOCKED |
+| 04 | Soy sauce front | pass | pass; brand, name, weight match; saved | PASS |
+| 05 | Soy sauce front, absent ingredients | needs_review | needs_review; ingredients missing; saved | PASS |
 | 06 | Oats front | pass | pass; name, variant, weight match; saved | PASS |
 | 07 | Oats back | pass | pass; ingredients match; saved | PASS |
 | 08 | Cinnamon nutrition | pass | pass; serving size matches; saved | PASS |

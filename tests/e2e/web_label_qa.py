@@ -11,6 +11,7 @@ import argparse
 import hashlib
 import io
 import json
+import subprocess
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -44,17 +45,33 @@ def download(output):
                 url = source["image_url"]
                 if urlparse(url).scheme != "https":
                     raise ValueError(f"Non-HTTPS image URL: {url}")
-                with httpx.Client(follow_redirects=True, timeout=30,
-                                  headers={"User-Agent": "Mozilla/5.0 VeriLabel-QA/1.0"}) as client:
-                    response = client.get(url)
-                    response.raise_for_status()
-                    data = response.content
+                headers = {
+                    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                                  "AppleWebKit/537.36 (KHTML, like Gecko) "
+                                  "Chrome/120.0.0.0 Safari/537.36",
+                    "Referer": f"{urlparse(url).scheme}://{urlparse(url).netloc}/",
+                }
+                try:
+                    with httpx.Client(follow_redirects=True, timeout=30, headers=headers) as client:
+                        response = client.get(url)
+                        response.raise_for_status()
+                        data = response.content
+                except httpx.HTTPStatusError as error:
+                    if error.response.status_code != 403:
+                        raise
+                    # Some image CDNs reject httpx while allowing a browser-style curl request.
+                    data = subprocess.run(
+                        ["curl", "-L", "--fail", "--silent", "--show-error", "--max-time", "30",
+                         "-H", f"Referer: {headers['Referer']}",
+                         "-H", f"User-Agent: {headers['User-Agent']}", url],
+                        check=True, capture_output=True,
+                    ).stdout
                 if len(data) > 4_500_000:
                     raise ValueError(f"{path.name}: image exceeds app upload limit")
                 path.write_bytes(data)
             verified_image(path, source)
             print(f"VERIFIED {path.name}: {source['bytes']} bytes, SHA256 {source['sha256']}")
-        except (httpx.HTTPError, OSError, ValueError) as error:
+        except (httpx.HTTPError, OSError, ValueError, subprocess.CalledProcessError) as error:
             failures.append(source["file"])
             print(f"UNAVAILABLE {source['file']}: {error}")
     if failures:
