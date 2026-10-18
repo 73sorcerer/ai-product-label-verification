@@ -4,8 +4,8 @@
 
 ## Verdict
 
-**Go / No-go:** ___ · Assessed by: ___ · Date: ___
-One-line reason: ___
+**Go / No-go:** No-go for final sign-off pending production UI and device tests · Assessed by: Vincent via Codex · Date: Oct 18, 2026 UTC
+One-line reason: The sample OCR and local API workflow pass, but the complete deployed UI flow, mobile photo uploads, and rehearsal have not been verified in this QA pass. Reassess after the remaining checks; this is an evidence gap, not a confirmed app failure.
 
 ## Pre-demo checklist (Tue Oct 20, 30 min before)
 
@@ -34,15 +34,15 @@ One-line reason: ___
 
 ## Test evidence
 
-Summary from [qa-test-plan.md](qa-test-plan.md): ___ of ___ tests pass. Open bugs: ___ (link each)
+Summary from [qa-test-plan.md](qa-test-plan.md): 10/10 deployed OCR cases passed on Oct 17. On Oct 18, current main `6e838b3` passed 179/179 backend unit tests, 16/16 local API end-to-end tests with an isolated SQLite database (all nine sample verdicts and history persistence), and 7/7 read-only deployed API checks; nine deployed write checks were skipped by `E2E_READONLY=1`. No new bug was filed from these checks. The production UI F/S/M/H/E/D/P/B rows remain unscored; do not count the local API results as those UI tests.
 
 ## Known limitations (say these out loud if asked)
 
 - OCR can misread blurry photos with high confidence. Example: "Health" read as "Heath" at 0.95, which can flag a correct field as incorrect. The overall result is still Needs Review, so nothing bad gets passed.
 - Uploads are limited to 4.5 MB by hosting; the app shrinks photos first.
 - No user accounts: anyone with the link can create specs and inspections.
-- Synthetic sample labels; ___ real phone photos tested.
-- ___
+- Synthetic sample labels; 0 real phone photos tested in this pass.
+- Production spec creation, Inspect-to-History UI flow, browser/device coverage, and billing remain to be tested before final sign-off.
 
 ## Fallback plan
 

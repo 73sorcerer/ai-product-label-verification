@@ -1,8 +1,10 @@
 # QA Test Plan
 
-**Owner:** Vincent · Issue [#6](https://github.com/Auth3nticAI/ai-product-label-verification/issues/6) · TEMPLATE: fill in the *Actual* and *Result* columns
+**Owner:** Vincent · Issue [#6](https://github.com/Auth3nticAI/ai-product-label-verification/issues/6)
 
-Environment: https://ai-product-label-verification.vercel.app · Tester: ___ · Date: ___
+Environment: https://ai-product-label-verification.vercel.app (OCR and read-only API checks); isolated local API and SQLite database (workflow checks) · Tester: Vincent via Codex · Dates: Oct 17–18, 2026 UTC
+
+Evidence scope: O1–O10 were measured against the deployed `/api/ocr` endpoint on Oct 17 using sample files from main commit `fe418ca`. On Oct 18, current main `6e838b3` passed 179/179 backend unit tests, 16/16 local API end-to-end tests (including all nine manifest verdicts and history persistence) against an isolated SQLite database, and 7/7 read-only tests against the deployed API (nine production write tests skipped). The local verdicts do **not** establish that the production UI, phone upload, or production write flow passed. Those rows remain open below.
 
 Result key: **PASS** matches expected · **FAIL** differs (file a bug, link it) · **BLOCKED** can't run yet (e.g. route not built)
 
@@ -13,20 +15,22 @@ Expected: every printed field appears in `text`. The blurry label has low-confid
 
 | # | File | Expected OCR | Actual (mean confidence, anything misread) | Result |
 |---|---|---|---|---|
-| O1 | granola_correct.png | All 7 fields read; mean ≈ 0.99 | | |
-| O2 | granola_wrong_net_weight.png | Reads "Net Wt 10 oz (283 g)" | | |
-| O3 | granola_missing_allergens.png | No "Contains:" line | | |
-| O4 | coffee_correct.png | All 7 fields read | | |
-| O5 | coffee_brand_typo.png | Reads "Peek Roasters" | | |
-| O6 | coffee_wrong_best_by.png | Reads "Best By: 01/10/2026" | | |
-| O7 | vitamin_correct.png | All 7 fields read | | |
-| O8 | vitamin_wrong_sku.png | Reads "SKU: VC-MV-090" | | |
-| O9 | vitamin_low_quality.jpg | Some lines misread with confidence < 0.90 (date ≈ "06/312028") | | |
-| O10 | a .txt or .pdf file | 422 "not a readable image" | | |
+| O1 | granola_correct.png | All 7 fields read; mean ≈ 0.99 | All 7 fields read; mean 0.9972 | PASS |
+| O2 | granola_wrong_net_weight.png | Reads "Net Wt 10 oz (283 g)" | Exact line read; mean 0.9946 | PASS |
+| O3 | granola_missing_allergens.png | No "Contains:" line | No "Contains:" line; mean 0.9966 | PASS |
+| O4 | coffee_correct.png | All 7 fields read | All 7 fields read; mean 0.9894 | PASS |
+| O5 | coffee_brand_typo.png | Reads "Peek Roasters" | Exact line read; mean 0.9894 | PASS |
+| O6 | coffee_wrong_best_by.png | Reads "Best By: 01/10/2026" | Exact line read; mean 0.9897 | PASS |
+| O7 | vitamin_correct.png | All 7 fields read | All 7 fields read; mean 0.9993 | PASS |
+| O8 | vitamin_wrong_sku.png | Reads "SKU: VC-MV-090" | Exact line read; mean 0.9993 | PASS |
+| O9 | vitamin_low_quality.jpg | Some lines misread with confidence < 0.90 (date ≈ "06/312028") | Mean 0.8732; `Cons usoy` 0.6408, `Dest By: 06/312028` 0.8695, `VitaCore Heath` 0.9527 | PASS |
+| O10 | a .txt or .pdf file | 422 "not a readable image" | A plain-text file returned HTTP 422, `File is not a readable image` | PASS |
 
 ## 2. Full workflow (live now)
 
 Create the three specs from `data/sample_labels/specs.json`, then upload each label against its spec.
+
+Local automated evidence: F1–F9 matched `data/sample_labels/manifest.json` on Oct 18; inspection history persisted and could be read back. Production UI results, per-field explanation boxes, Issues counts, and image evidence crops were not exercised in this pass, so the live rows remain unscored.
 
 | # | File | Expected status | Expected field flags | Actual | Result |
 |---|---|---|---|---|---|
