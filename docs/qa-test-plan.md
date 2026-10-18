@@ -4,7 +4,7 @@
 
 Environment: https://ai-product-label-verification.vercel.app (OCR and read-only API checks); isolated local API and SQLite database (workflow checks) · Tester: Vincent via Codex · Dates: Oct 17–18, 2026 UTC
 
-Evidence scope: O1–O10 were measured against the deployed `/api/ocr` endpoint on Oct 17 using sample files from main commit `fe418ca`. On Oct 18, current main `6e838b3` passed 179/179 backend unit tests, 16/16 local API end-to-end tests (including all nine manifest verdicts and history persistence) against an isolated SQLite database, and 7/7 read-only tests against the deployed API (nine production write tests skipped). The local verdicts do **not** establish that the production UI, phone upload, or production write flow passed. Those rows remain open below.
+Evidence scope: O1–O10 were measured against the deployed `/api/ocr` endpoint on Oct 17 using sample files from main commit `fe418ca`. On Oct 18, the current branch (based on main `6e838b3`) passed 179/179 backend unit tests and 21/21 local API end-to-end tests against an isolated SQLite database. The prior 16-test suite covered all nine manifest verdicts; this PR adds five synthetic HTTP regression cases and strengthens saved-result assertions. The deployed API passed 7/7 read-only-mode checks before the new cases were added (nine production write tests skipped). The expanded suite also passed in read-only mode locally: 7 passed, 14 write tests skipped. The local verdicts do **not** establish that the production UI, phone upload, or production write flow passed. Those rows remain open below.
 
 Result key: **PASS** matches expected · **FAIL** differs (file a bug, link it) · **BLOCKED** can't run yet (e.g. route not built)
 
@@ -26,11 +26,15 @@ Expected: every printed field appears in `text`. The blurry label has low-confid
 | O9 | vitamin_low_quality.jpg | Some lines misread with confidence < 0.90 (date ≈ "06/312028") | Mean 0.8732; `Cons usoy` 0.6408, `Dest By: 06/312028` 0.8695, `VitaCore Heath` 0.9527 | PASS |
 | O10 | a .txt or .pdf file | 422 "not a readable image" | A plain-text file returned HTTP 422, `File is not a readable image` | PASS |
 
+O9 is the Oct 17 measurement. A read-only repeat of `/api/ocr` on Oct 18 against the current deployed build returned mean confidence 0.9126 and the lines `Cons snoy`, `Dest By: 06/312028`, and only `TX` where the manufacturer line should be. This still demonstrates the expected low-confidence date, but the manufacturer extraction has changed. No production inspection was created to test its verdict.
+
 ## 2. Full workflow (live now)
 
 Create the three specs from `data/sample_labels/specs.json`, then upload each label against its spec.
 
 Local automated evidence: F1–F9 matched `data/sample_labels/manifest.json` on Oct 18; inspection history persisted and could be read back. Production UI results, per-field explanation boxes, Issues counts, and image evidence crops were not exercised in this pass, so the live rows remain unscored.
+
+**F9 follow-up:** The local verifier returned `allergens: uncertain`, `best_by: uncertain`, and `manufacturer: missing` from the current blurry vitamin image. The overall `needs_review` verdict and two required flags match the answer key, but the extra missing field would make the Issues count **3**, versus the **2** expected below. The current deployed OCR omits most of that manufacturer line too; the deployed inspection/UI result still needs verification. Treat the exact F9 issue count as an open QA finding, not a pass.
 
 | # | File | Expected status | Expected field flags | Actual | Result |
 |---|---|---|---|---|---|
@@ -45,6 +49,18 @@ Local automated evidence: F1–F9 matched `data/sample_labels/manifest.json` on 
 | F9 | vitamin_low_quality.jpg | Needs Review | allergens + best_by **uncertain** (not incorrect) | | |
 
 For every F row also check: the **Issues** count in History equals the number of non-match fields (F9 → 2), every flagged field has its own explanation box under the table (missing ones included), and *Extracted text* lists the OCR lines with low-confidence ones dimmed.
+
+## 2c. Additional synthetic regression pack (local API only)
+
+The committed [QA fixture pack](../tests/e2e/fixtures/README.md) uses the team's synthetic Golden Harvest Granola spec and renderer; no real product or private photo is included. These tests run over HTTP against an isolated local database. They are skipped by `E2E_READONLY=1` on the deployed API.
+
+| # | Input / action | Expected | Actual (Oct 18 local) | Result |
+|---|---|---|---|---|
+| Q1 | `granola_two_issues.png`: 10 oz net weight and no allergen line | Needs Review; `net_contents` incorrect and `allergens` missing; exactly two issues with persistent per-field evidence | Both flags correct; wrong weight found, missing allergen null; OCR boxes inside uploaded image; result and history agree | PASS |
+| Q2 | Plain-text file as an inspection image | 422 readable-image error; no history row | 422; history IDs unchanged | PASS |
+| Q3 | Text bytes mislabeled as PNG | 422 readable-image error; no history row | 422; history IDs unchanged | PASS |
+| Q4 | Empty PNG upload | 422 empty-upload error; no history row | 422; history IDs unchanged | PASS |
+| Q5 | Create two synthetic specs; delete unused one, inspect against the other, then try to delete it | Unused spec deleted (204); inspected spec retained (409) with its inspection still readable | 204 then 404 for unused; 409 for inspected; spec and inspection still readable | PASS |
 
 ## 2b. Sample inspection and spec management
 

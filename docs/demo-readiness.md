@@ -34,11 +34,11 @@ One-line reason: The sample OCR and local API workflow pass, but the complete de
 
 ## Test evidence
 
-Summary from [qa-test-plan.md](qa-test-plan.md): 10/10 deployed OCR cases passed on Oct 17. On Oct 18, current main `6e838b3` passed 179/179 backend unit tests, 16/16 local API end-to-end tests with an isolated SQLite database (all nine sample verdicts and history persistence), and 7/7 read-only deployed API checks; nine deployed write checks were skipped by `E2E_READONLY=1`. No new bug was filed from these checks. The production UI F/S/M/H/E/D/P/B rows remain unscored; do not count the local API results as those UI tests.
+Summary from [qa-test-plan.md](qa-test-plan.md): 10/10 deployed OCR cases passed on Oct 17. On Oct 18, the current branch passed 179/179 backend unit tests and 21/21 local API end-to-end tests with an isolated SQLite database (16 existing scenarios plus five new synthetic regression cases). The deployed API passed 7/7 read-only-mode checks before those new cases were added; nine production write checks were skipped. The expanded local suite passed 7 with 14 write tests skipped in read-only mode. One open QA finding: current OCR drops most of the blurry vitamin manufacturer line, and local F9 has three issues rather than the plan's expected two. No issue has been filed or production inspection run for that finding. The production UI F/S/M/H/E/D/P/B rows remain unscored; do not count the local API results as those UI tests.
 
 ## Known limitations (say these out loud if asked)
 
-- OCR can misread blurry photos with high confidence. Example: "Health" read as "Heath" at 0.95, which can flag a correct field as incorrect. The overall result is still Needs Review, so nothing bad gets passed.
+- OCR can lose text from a blurry photo. On Oct 18, the deployed OCR returned only `TX` for the vitamin sample's manufacturer line; the local verifier marked that field missing, in addition to the two expected uncertain fields. The overall result is still Needs Review, but F9's issue count needs production verification.
 - Uploads are limited to 4.5 MB by hosting; the app shrinks photos first.
 - No user accounts: anyone with the link can create specs and inspections.
 - Synthetic sample labels; 0 real phone photos tested in this pass.
