@@ -18,7 +18,7 @@ QA = json.loads((FIXTURES / "qa_manifest.json").read_text())
 
 
 @pytest.mark.parametrize("case", QA["cases"], ids=lambda c: c["id"])
-def test_two_independent_defects_are_saved_with_two_explanations(api, spec_ids, case):
+def test_two_independent_defects_are_saved_with_field_evidence(api, spec_ids, case):
     """One label must keep both wrong weight and missing allergens distinct."""
     image = FIXTURES / case["image"]
     spec_id = spec_ids[case["spec_id"]]
